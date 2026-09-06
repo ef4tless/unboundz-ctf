@@ -227,7 +227,7 @@ def find_challenge(challenge_id: str, roots: Optional[list[str]] = None) -> Opti
 def all_active_challenges() -> list[Challenge]:
     """跨所有最近根目录,返回需要轮询的题目。
     running/need_help/exited/solved 都在轮询集里做状态跟踪(退出/复活/pane丢失);
-    flag 捕获功能已移除, solved 仅靠用户手动填 flag 触发。"""
+    flag 捕获功能已移除, solved 由用户手动保存非空 flag 触发，清空 flag 时撤销。"""
     state = list_roots()
     roots = [r["path"] for r in state["recent_roots"] if r["exists"]]
     out, seen = [], set()

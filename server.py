@@ -318,6 +318,11 @@ def set_flag(cid: str, body: FlagIn):
     if ch.flag:
         ch.flag_candidate = ""
         ch.status = "solved"
+    elif ch.status == "solved":
+        # `solved` is derived from a non-empty manually confirmed flag.  Do not
+        # leave the challenge solved after that flag is removed; recover the
+        # most accurate current state from its pane instead.
+        ch.status = _status_without_flag(ch)
     ch.save()
     return vars(ch)
 
@@ -393,6 +398,19 @@ def _get(cid: str) -> store.Challenge:
     if ch is None:
         raise HTTPException(404, f"题目不存在: {cid}")
     return ch
+
+
+def _status_without_flag(ch: store.Challenge) -> str:
+    """Infer the challenge status after its confirmed flag is cleared."""
+    pane = ch.tmux.get("pane", "")
+    if not pane:
+        return "ready"
+    if not tmuxctl.pane_exists(pane):
+        return "pane_gone"
+    current = tmuxctl.pane_current_command(pane)
+    if not current or current in tmuxctl.SHELL_CMDS:
+        return "exited"
+    return "running"
 
 
 # ---------------------------------------------------------------- static

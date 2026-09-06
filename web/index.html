@@ -119,8 +119,9 @@
 
 <!-- 手动 flag -->
 <dialog id="dlgFlag">
-  <h2>填写 flag</h2>
+  <h2>登记 / 修改 flag</h2>
   <input type="text" id="fFlag" placeholder="flag{...}">
+  <p style="font-size:12px;color:var(--dim)">保存非空 flag 会标记为「已解出」；清空后保存会撤销该状态。</p>
   <div class="modal-actions">
     <button onclick="dlgFlag.close()">取消</button>
     <button class="primary" id="btnSetFlag">保存</button>

@@ -1,6 +1,6 @@
 # ubz-ctf
 
-CTF 协作层：Web 界面创建题目，自动下载附件、在 tmux 里开 pane 启动 codex/claude 并注入分类提示词，后台监控运行状态与求助信号。
+面向多题并行 CTF 的本地任务面板：通过 Web 界面建立题目，为每题分配 tmux pane，启动 Codex/Claude、注入分类提示词，并集中查看运行状态与人工求助信号。
 
 ## 启动
 
@@ -13,10 +13,11 @@ CTF 协作层：Web 界面创建题目，自动下载附件、在 tmux 里开 pa
 
 1. 首次打开先点顶部设置**赛事根目录**（如 `~/ctf/2026qwb`），不存在可勾选创建。
 2. 「新建题目」：填名称、选类型（web/pwn/re/misc/crypto/custom）、题目信息、目标地址，附件支持**下载链接**（每行一个）和**本地上传**（多选，压缩包自动解压）两种方式，可混用；选 harness，默认创建后立即启动。
-3. 每题在 tmux session `ctf-<赛事名>` 里占一个 pane，全部 pane 平铺在**同一个 window** 里（attach 进去一屏看到所有 agent；想恢复"每 window 4 pane 满了开新 window"把 `panes_per_window` 改成 4 即可）。
-4. 仪表盘每 3s 刷新：misc 出现求助关键词标橙；进程退出标红可一键恢复（`codex resume --last` / `claude -c`）；在 pane 里手动拉起 harness 会自动回 running。
-5. 「✉ 消息」直接往 agent 的 pane 追加指令；「⌨ 终端」接管该题——优先把**已 attach 的现有终端**（本赛事 session 上的 client 优先，否则最近活跃的 client）switch-client 切过去；没有可用 client 时才在 gnome-terminal 里开标签页；「📎 附件」解题中途补传文件；「⚑ flag」手动登记 flag 并标记已解出。
-7. **靶机后补**：建题时靶机可留空（web/pwn 卡片显示「待靶机」）。环境开放后点卡片上的 🎯 行，填入地址后可「保存并发送」——自动往 agent 的 pane 发一条补充消息（文案可编辑），同时 prompt.md 重渲染、补充记录进 meta 的 supplements。agent 不在运行时会拒绝发送（防止消息被 shell 当命令执行），信息照常保存。
+3. 每题在 tmux session `ctf-<赛事名>` 里占一个 pane。默认每个 window 放 4 个 pane 并采用 tiled 布局，满后自动新建 window；把 `config.yaml` 中的 `panes_per_window` 设为 `0`，可改为所有 pane 平铺在同一个 window。
+4. Web 面板每 3 秒刷新，后台 monitor 默认每 4 秒检查一次 pane。输出中出现配置的求助关键词时标橙；进程退出或 pane 消失时标红，并提供恢复入口。在 pane 中手动重新启动 harness 后，状态会自动回到「解题中」。
+5. 「⌨ 终端」用于接管该题：优先复用已 attach 的终端 client；没有可用 client 时，才由配置的终端模拟器打开标签页或窗口。「📎 附件」用于在解题过程中补传文件。
+6. 「⚑ flag」用于手动登记、修改或删除最终 flag。保存非空 flag 后题目标记为「已解出」；清空输入并保存会撤销「已解出」，再根据 pane 的实际状态显示为「解题中」「进程退出」「窗口丢失」或「就绪」。
+7. **靶机后补**：建题时靶机可留空（Web/Pwn 卡片显示「待靶机」）。环境开放后点击卡片上的 🎯 行，可只保存地址，也可把可编辑的补充消息发送给正在运行的 agent；同时会重新渲染 `prompt.md`，并把消息写入 `meta.json` 的 `supplements`。agent 未运行时只保存信息，不把文本发送给 shell。
 
 ## 结构
 

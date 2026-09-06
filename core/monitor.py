@@ -4,7 +4,7 @@
   1. capture-pane 抓取 —— 求助关键词 / UBZ-EXIT 退出标记 / 最近输出快照
   2. pane 存活检查     —— pane 消失标记 pane_gone; exited 题目检测到非 shell
                          前台进程(用户手动拉起 harness)自动回 running
-flag 捕获功能已移除: solved 状态由用户手动填 flag 触发。
+flag 捕获功能已移除: solved 状态由用户手动保存非空 flag 触发，清空 flag 时撤销。
 另维护 elsewhere_running (非当前根目录里仍在跑的题目数) 供前端提示。
 """
 
