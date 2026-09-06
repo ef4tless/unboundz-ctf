@@ -1,0 +1,446 @@
+<title>ubz-ctf</title>
+<style>
+  :root {
+    --bg: #0f1115; --panel: #171a21; --panel2: #1e222b; --border: #2a2f3a;
+    --fg: #d8dee9; --dim: #8b93a3; --accent: #4c9aff;
+    --green: #3fb950; --orange: #d29922; --red: #f85149; --gray: #6e7681;
+    --purple: #bc8cff;
+  }
+  * { box-sizing: border-box; }
+  body { background: var(--bg); color: var(--fg); font-family: system-ui, "PingFang SC", "Microsoft YaHei", sans-serif; margin: 0; }
+  header { display: flex; align-items: center; gap: 12px; padding: 12px 20px; border-bottom: 1px solid var(--border); position: sticky; top: 0; background: var(--bg); z-index: 5; }
+  header h1 { font-size: 18px; margin: 0; letter-spacing: 1px; }
+  .chip { background: var(--panel2); border: 1px solid var(--border); border-radius: 6px; padding: 4px 10px; font-size: 13px; cursor: pointer; color: var(--dim); }
+  .chip:hover { border-color: var(--accent); color: var(--fg); }
+  .spacer { flex: 1; }
+  button { background: var(--panel2); color: var(--fg); border: 1px solid var(--border); border-radius: 5px; padding: 2px 7px; font-size: 11px; cursor: pointer; }
+  button:hover { border-color: var(--accent); }
+  button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  button.danger:hover { border-color: var(--red); color: var(--red); }
+  button:disabled { opacity: .35; cursor: default; }
+  #elsewhere { font-size: 13px; color: var(--orange); }
+
+  /* 类型分组带 + 组内小方块 */
+  #board { padding: 14px 20px; }
+  .cat-sec { margin-bottom: 16px; }
+  .cat-head { font-weight: 700; font-size: 14px; letter-spacing: 2px; padding: 2px 2px 8px; display: flex; align-items: baseline; gap: 10px; }
+  .cat-head .cnt { font-size: 12px; font-weight: 400; letter-spacing: 0; color: var(--dim); }
+  .tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(440px, 1fr)); gap: 8px; align-items: start; }
+
+  .tile { background: var(--panel); border: 1px solid var(--border); border-left-width: 3px; border-radius: 8px; padding: 7px 9px; display: flex; flex-direction: column; gap: 4px; }
+  .tile.solved { border-left-color: var(--green); }
+  .tile.need_help { border-left-color: var(--orange); }
+  .tile.exited, .tile.failed, .tile.pane_gone { border-left-color: var(--red); }
+  .tile.running { border-left-color: var(--accent); }
+  .t-head { display: flex; align-items: center; gap: 6px; }
+  .t-name { font-weight: 600; font-size: 13px; word-break: break-all; }
+  .badge { font-size: 10px; padding: 1px 6px; border-radius: 8px; background: var(--panel2); border: 1px solid var(--border); text-transform: uppercase; flex: none; }
+  .status { font-size: 11px; padding: 1px 7px; border-radius: 8px; margin-left: auto; flex: none; }
+  .status.running { color: var(--accent); border: 1px solid var(--accent); }
+  .status.solved { color: var(--green); border: 1px solid var(--green); }
+  .status.need_help { color: var(--orange); border: 1px solid var(--orange); }
+  .status.exited, .status.failed, .status.pane_gone { color: var(--red); border: 1px solid var(--red); }
+  .status.created, .status.ready, .status.downloading, .status.launching, .status.stopped, .status.archived { color: var(--gray); border: 1px solid var(--gray); }
+  .target { font-size: 11px; color: var(--dim); word-break: break-all; cursor: pointer; }
+  .note { font-size: 11px; color: var(--orange); word-break: break-all; }
+  .flag { font-family: ui-monospace, monospace; font-size: 11px; background: var(--panel2); border-radius: 5px; padding: 3px 7px; word-break: break-all; cursor: pointer; }
+  .flag.real { border: 1px solid var(--green); color: var(--green); }
+  pre.output { font-family: ui-monospace, monospace; font-size: 10.5px; line-height: 1.4; color: var(--dim); background: #0b0d11; border-radius: 5px; padding: 6px 8px; margin: 0; max-height: 260px; overflow-y: auto; white-space: pre-wrap; word-break: break-all; }
+  .actions { display: flex; flex-wrap: wrap; gap: 4px; }
+
+  .empty-hint { color: var(--dim); text-align: center; margin-top: 80px; }
+  dialog { background: var(--panel); color: var(--fg); border: 1px solid var(--border); border-radius: 12px; padding: 20px; width: min(640px, 92vw); }
+  dialog::backdrop { background: rgba(0,0,0,.6); }
+  dialog h2 { margin-top: 0; font-size: 16px; }
+  label { display: block; font-size: 13px; color: var(--dim); margin: 10px 0 4px; }
+  input[type=text], textarea, select { width: 100%; background: var(--panel2); border: 1px solid var(--border); border-radius: 6px; color: var(--fg); padding: 7px 9px; font-size: 13px; font-family: inherit; }
+  textarea { resize: vertical; }
+  .cats { display: flex; gap: 6px; flex-wrap: wrap; }
+  .cats button.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .tpl-preview { font-size: 12px; color: var(--dim); background: var(--panel2); border-radius: 6px; padding: 8px; margin-top: 6px; max-height: 110px; overflow-y: auto; white-space: pre-wrap; }
+  .modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
+  .root-item { padding: 7px 10px; border-radius: 6px; cursor: pointer; font-family: ui-monospace, monospace; font-size: 13px; }
+  .root-item:hover { background: var(--panel2); }
+  .root-item.current { color: var(--green); }
+  .err { color: var(--red); font-size: 13px; margin-top: 8px; }
+</style>
+
+<header>
+  <h1>⚑ ubz-ctf</h1>
+  <span class="chip" id="rootChip" title="点击切换赛事根目录">未设置根目录</span>
+  <span id="elsewhere"></span>
+  <span class="spacer"></span>
+  <button class="primary" id="btnNew">+ 新建题目</button>
+</header>
+
+<div id="board"></div>
+<div class="empty-hint" id="emptyHint" hidden>当前赛事还没有题目，点右上角「新建题目」开始</div>
+
+<!-- 新建题目 -->
+<dialog id="dlgNew">
+  <h2>新建题目</h2>
+  <label>题目名称</label>
+  <input type="text" id="fName" placeholder="babyheap">
+  <label>类型（决定初始提示词模板）</label>
+  <div class="cats" id="fCats"></div>
+  <div class="tpl-preview" id="fTplPreview"></div>
+  <textarea id="fCustomPrompt" rows="5" hidden placeholder="自定义初始提示词，可使用 {题目信息} {目标} {工作目录} {附件清单} 变量"></textarea>
+  <label>题目信息（描述、提示、给的条件）</label>
+  <textarea id="fInfo" rows="4" placeholder="题目描述原文"></textarea>
+  <label>目标地址（靶机 / 远程地址，可空）</label>
+  <input type="text" id="fTarget" placeholder="http://1.2.3.4:8080 或 1.2.3.4:1337">
+  <label>附件下载链接（每行一个，可空）</label>
+  <textarea id="fUrls" rows="2" placeholder="https://.../task.zip"></textarea>
+  <label>或本地上传附件（可多选，压缩包自动解压）</label>
+  <input type="file" id="fFiles" multiple>
+  <label>Harness</label>
+  <select id="fHarness"></select>
+  <label style="margin-top:12px"><input type="checkbox" id="fAutoLaunch" checked> 创建后立即启动（开 pane、起 harness、注入提示词）</label>
+  <div class="err" id="fErr"></div>
+  <div class="modal-actions">
+    <button onclick="dlgNew.close()">取消</button>
+    <button class="primary" id="btnCreate">创建</button>
+  </div>
+</dialog>
+
+<!-- 根目录切换 -->
+<dialog id="dlgRoot">
+  <h2>赛事根目录</h2>
+  <div id="rootList"></div>
+  <label>新路径</label>
+  <input type="text" id="fRootPath" placeholder="~/ctf/2026qwb">
+  <label><input type="checkbox" id="fRootCreate" checked> 不存在则创建</label>
+  <div class="err" id="fRootErr"></div>
+  <div class="modal-actions">
+    <button onclick="dlgRoot.close()">关闭</button>
+    <button class="primary" id="btnSetRoot">切换</button>
+  </div>
+</dialog>
+
+<!-- 手动 flag -->
+<dialog id="dlgFlag">
+  <h2>填写 flag</h2>
+  <input type="text" id="fFlag" placeholder="flag{...}">
+  <div class="modal-actions">
+    <button onclick="dlgFlag.close()">取消</button>
+    <button class="primary" id="btnSetFlag">保存</button>
+  </div>
+</dialog>
+
+<!-- 删除题目 -->
+<dialog id="dlgDel">
+  <h2>删除题目</h2>
+  <div class="target" id="delInfo" style="cursor:default"></div>
+  <p style="font-size:13px;color:var(--dim)">pane 会被杀掉。题目目录里有 prompt.md、附件、agent 写的 exploit/writeup 等文件。</p>
+  <div class="modal-actions">
+    <button onclick="dlgDel.close()">取消</button>
+    <button id="btnDelKeep">移除出面板（保留文件）</button>
+    <button class="danger" id="btnDelAll">连同目录一起删除</button>
+  </div>
+</dialog>
+
+<!-- 靶机补充 -->
+<dialog id="dlgTarget">
+  <h2>靶机 / 远程地址</h2>
+  <div class="target" id="tgtName" style="cursor:default"></div>
+  <label>远程地址（留空表示暂无）</label>
+  <input type="text" id="fTgt" placeholder="1.2.3.4:1337 或 http://1.2.3.4:8080">
+  <label>同时发给 agent 的消息（可编辑；仅 agent 运行中时能发）</label>
+  <textarea id="fTgtMsg" rows="4"></textarea>
+  <div class="err" id="fTgtErr"></div>
+  <div class="modal-actions">
+    <button onclick="dlgTarget.close()">取消</button>
+    <button id="btnTgtSave">仅保存</button>
+    <button class="primary" id="btnTgtSend">保存并发送</button>
+  </div>
+</dialog>
+
+<!-- 全局隐藏的文件选择器: "📎 附件"用 -->
+<input type="file" id="fUpload" multiple hidden>
+
+<script>
+const $ = id => document.getElementById(id);
+const dlgNew = $('dlgNew'), dlgRoot = $('dlgRoot'), dlgFlag = $('dlgFlag'), dlgDel = $('dlgDel'), dlgTarget = $('dlgTarget');
+let cfg = null, templates = {}, curCat = null, flagTarget = null, delTarget = null, uploadTarget = null, tgtCh = null;
+
+async function api(path, method = 'GET', body = null) {
+  const opt = { method, headers: { 'Content-Type': 'application/json' } };
+  if (body) opt.body = JSON.stringify(body);
+  const r = await fetch('/api' + path, opt);
+  const data = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(data.detail || r.statusText);
+  return data;
+}
+
+const STATUS_LABEL = {
+  created: '已创建', downloading: '下载中', ready: '就绪', launching: '启动中',
+  running: '解题中', need_help: '需要人工', solved: '已解出', exited: '进程退出',
+  pane_gone: '窗口丢失', stopped: '已停止', failed: '失败', archived: '已归档',
+};
+const CAT_ORDER = ['web', 'pwn', 're', 'misc', 'crypto', 'custom'];
+const CAT_COLOR = { web: 'var(--accent)', pwn: 'var(--red)', re: 'var(--purple)', misc: 'var(--orange)', crypto: 'var(--green)', custom: 'var(--gray)' };
+
+async function refresh() {
+  let data;
+  try { data = await api('/challenges'); }
+  catch (e) { return; }
+  const root = data.root;
+  $('rootChip').textContent = root ? ('📁 ' + root + '  (tmux: ' + data.tmux_session + ')') : '⚠ 点击设置赛事根目录';
+  $('elsewhere').textContent = data.elsewhere_running ? `其他赛事还有 ${data.elsewhere_running} 题在跑` : '';
+  $('emptyHint').hidden = !root || data.challenges.length > 0;
+
+  const groups = {};
+  for (const ch of data.challenges) (groups[ch.category] ??= []).push(ch);
+  const cats = [...CAT_ORDER, ...Object.keys(groups).filter(c => !CAT_ORDER.includes(c))]
+    .filter(c => groups[c] && groups[c].length);
+
+  const board = $('board');
+  board.innerHTML = '';
+  for (const cat of cats) {
+    const list = groups[cat];
+    const running = list.filter(c => ['running', 'need_help'].includes(c.status)).length;
+    const solved = list.filter(c => c.flag).length;
+    const sec = document.createElement('div');
+    sec.className = 'cat-sec';
+    const head = document.createElement('div');
+    head.className = 'cat-head';
+    head.style.color = CAT_COLOR[cat] || 'var(--fg)';
+    head.innerHTML = `<span></span><span class="cnt">${list.length} 题 · ${running} 在跑 · ${solved} 有 flag</span>`;
+    head.querySelector('span').textContent = cat.toUpperCase();
+    sec.appendChild(head);
+    const tiles = document.createElement('div');
+    tiles.className = 'tiles';
+    for (const ch of list) tiles.appendChild(renderTile(ch));
+    sec.appendChild(tiles);
+    board.appendChild(sec);
+  }
+}
+
+// 小方块直接显示全部信息: 不折叠、不缩略、按钮在块上
+function renderTile(ch) {
+  const tile = document.createElement('div');
+  tile.className = 'tile ' + ch.status;
+
+  const head = document.createElement('div');
+  head.className = 't-head';
+  head.innerHTML = `<span class="t-name"></span><span class="badge">${ch.harness}</span><span class="status ${ch.status}">${STATUS_LABEL[ch.status] || ch.status}</span>`;
+  head.querySelector('.t-name').textContent = ch.name;
+  if (!ch.target && ['web', 'pwn'].includes(ch.category)) {
+    const b = document.createElement('span');
+    b.className = 'badge';
+    b.style.cssText = 'color:var(--orange);border-color:var(--orange)';
+    b.textContent = '待靶机';
+    head.insertBefore(b, head.querySelector('.status'));
+  }
+  tile.appendChild(head);
+
+  const t = document.createElement('div');
+  t.className = 'target';
+  t.title = '点击补充/修改靶机';
+  t.textContent = (ch.target ? '🎯 ' + ch.target : '🎯 未设置靶机（点击补充）') +
+    (ch.download_status && ch.attachment_urls.length ? `  📦 ${ch.download_status}` : '');
+  t.onclick = () => openTarget(ch);
+  tile.appendChild(t);
+
+  if (ch.flag) {
+    const f = document.createElement('div');
+    f.className = 'flag real';
+    f.textContent = ch.flag;
+    f.title = '点击复制';
+    f.onclick = () => { navigator.clipboard.writeText(ch.flag); f.textContent = '✓ 已复制'; setTimeout(() => f.textContent = ch.flag, 800); };
+    tile.appendChild(f);
+  }
+
+  if (ch.note) {
+    const n = document.createElement('div');
+    n.className = 'note';
+    n.textContent = '⚠ ' + ch.note;
+    tile.appendChild(n);
+  }
+
+  const pre = document.createElement('pre');
+  pre.className = 'output';
+  pre.textContent = ch.last_output || '（暂无输出）';
+  tile.appendChild(pre);
+
+  const act = document.createElement('div');
+  act.className = 'actions';
+  const mk = (label, fn, cls = '', title = '', enabled = true) => {
+    const b = document.createElement('button');
+    b.textContent = label; b.className = cls; b.title = title; b.disabled = !enabled;
+    b.onclick = () => fn(ch);
+    act.appendChild(b);
+  };
+  const hasPane = !!(ch.tmux && ch.tmux.pane);
+  const resumable = ['exited', 'pane_gone'].includes(ch.status);
+  mk('↻ 恢复', c => act_resume(c), 'primary', '恢复会话并自动续跑（goal 弹窗自动确认）', resumable);
+  mk('⌨ 终端', c => act_focus(c), '', '接管该题 pane（优先复用已打开的终端）', hasPane);
+  mk('⚑ flag', c => { flagTarget = c; $('fFlag').value = c.flag || ''; dlgFlag.showModal(); });
+  mk('📎 附件', c => { uploadTarget = c; $('fUpload').click(); }, '', '上传本地文件到该题 attachments/（压缩包自动解压）');
+  mk('✕ 删除', c => { delTarget = c; $('delInfo').textContent = c.name + '  (' + c.workdir + ')'; dlgDel.showModal(); }, 'danger');
+  tile.appendChild(act);
+  return tile;
+}
+
+async function act_resume(ch) { try { await api(`/challenges/${ch.id}/resume`, 'POST'); } catch (e) { alert(e.message); } refresh(); }
+async function act_focus(ch) { try { await api(`/challenges/${ch.id}/focus`, 'POST'); } catch (e) { alert(e.message); } }
+
+// ---------------- 新建题目 ----------------
+$('btnNew').onclick = async () => {
+  if (!cfg) cfg = await api('/config');
+  templates = await api('/templates');
+  const cats = $('fCats');
+  cats.innerHTML = '';
+  for (const c of cfg.categories) {
+    const b = document.createElement('button');
+    b.textContent = c;
+    b.onclick = () => { curCat = c; [...cats.children].forEach(x => x.classList.remove('active')); b.classList.add('active'); showTpl(); };
+    cats.appendChild(b);
+    if (!curCat) { curCat = c; b.classList.add('active'); }
+  }
+  showTpl();
+  const sel = $('fHarness');
+  sel.innerHTML = '';
+  for (const h of cfg.harnesses) {
+    const o = document.createElement('option');
+    o.value = o.textContent = h;
+    if (h === cfg.default_harness) o.selected = true;
+    sel.appendChild(o);
+  }
+  $('fErr').textContent = '';
+  dlgNew.showModal();
+};
+
+function showTpl() {
+  const isCustom = curCat === 'custom';
+  $('fCustomPrompt').hidden = !isCustom;
+  $('fTplPreview').textContent = isCustom ? '' : (templates[curCat] || '(模板文件缺失: prompts/' + curCat + '.md)');
+}
+
+$('btnCreate').onclick = async () => {
+  const files = $('fFiles').files;
+  const autoLaunch = $('fAutoLaunch').checked;
+  const body = {
+    name: $('fName').value.trim(),
+    category: curCat,
+    info: $('fInfo').value,
+    target: $('fTarget').value.trim(),
+    attachment_urls: $('fUrls').value.split('\n').map(s => s.trim()).filter(Boolean),
+    harness: $('fHarness').value,
+    custom_prompt: $('fCustomPrompt').value,
+    auto_launch: autoLaunch && files.length === 0,  // 有本地附件时: 先建→传→再启动
+  };
+  if (!body.name) { $('fErr').textContent = '名称不能为空'; return; }
+  try {
+    $('btnCreate').disabled = true;
+    const ch = await api('/challenges', 'POST', body);
+    if (files.length) {
+      $('fErr').textContent = `上传 ${files.length} 个附件中……`;
+      const fd = new FormData();
+      for (const f of files) fd.append('files', f);
+      const r = await fetch(`/api/challenges/${ch.id}/attachments`, { method: 'POST', body: fd });
+      const res = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(res.detail || '附件上传失败');
+      if (res.errors && res.errors.length) alert('解压警告:\n' + res.errors.join('\n'));
+      if (autoLaunch) {
+        $('fErr').textContent = '启动中……';
+        await api(`/challenges/${ch.id}/launch`, 'POST');
+      }
+    }
+    dlgNew.close();
+    $('fName').value = $('fInfo').value = $('fTarget').value = $('fUrls').value = '';
+    $('fFiles').value = '';
+  } catch (e) { $('fErr').textContent = e.message; }
+  finally { $('btnCreate').disabled = false; }
+  refresh();
+};
+
+// ---------------- 靶机补充 ----------------
+function defaultTargetMsg(t) {
+  return t ? `【环境补充】远程环境已开放：${t}。请继续解题：需要本地验证的先在本地验证稳定，再打远程拿真实 flag；拿到后按最初要求第一时间原样发给我，并写入 flag.txt。` : '';
+}
+function openTarget(c) {
+  tgtCh = c;
+  $('tgtName').textContent = c.name + (['running', 'need_help'].includes(c.status) ? '' : '（当前非运行状态，只能保存）');
+  $('fTgt').value = c.target || '';
+  $('fTgtMsg').value = defaultTargetMsg(c.target || '');
+  $('fTgtErr').textContent = '';
+  dlgTarget.showModal();
+}
+$('fTgt').oninput = () => { $('fTgtMsg').value = defaultTargetMsg($('fTgt').value.trim()); };
+$('btnTgtSave').onclick = () => patchTarget(false);
+$('btnTgtSend').onclick = () => patchTarget(true);
+async function patchTarget(send) {
+  if (!tgtCh) return;
+  const body = { target: $('fTgt').value.trim() };
+  if (send) body.message = $('fTgtMsg').value;
+  try { await api(`/challenges/${tgtCh.id}`, 'PATCH', body); dlgTarget.close(); }
+  catch (e) { $('fTgtErr').textContent = e.message; }
+  refresh();
+}
+
+// ---------------- 上传附件 ----------------
+$('fUpload').onchange = async () => {
+  if (!uploadTarget || !$('fUpload').files.length) return;
+  const fd = new FormData();
+  for (const f of $('fUpload').files) fd.append('files', f);
+  const r = await fetch(`/api/challenges/${uploadTarget.id}/attachments`, { method: 'POST', body: fd });
+  const res = await r.json().catch(() => ({}));
+  if (r.ok) {
+    let msg = `已上传到 ${uploadTarget.name}/attachments/: ${res.saved.join(', ')}`;
+    if (res.errors && res.errors.length) msg += '\n解压警告: ' + res.errors.join('; ');
+    if (uploadTarget.status === 'running') msg += '\n（题目进行中，可在终端里告知 agent 新附件）';
+    alert(msg);
+  } else alert('上传失败: ' + (res.detail || r.statusText));
+  $('fUpload').value = '';
+  refresh();
+};
+
+// ---------------- 根目录 ----------------
+$('rootChip').onclick = async () => {
+  const data = await api('/settings/root');
+  const list = $('rootList');
+  list.innerHTML = '';
+  for (const r of data.recent_roots) {
+    const d = document.createElement('div');
+    d.className = 'root-item' + (r.path === data.current_root ? ' current' : '');
+    d.textContent = (r.path === data.current_root ? '● ' : '○ ') + r.path + (r.exists ? '' : '（不存在）');
+    d.onclick = async () => { await api('/settings/root', 'PUT', { path: r.path }); dlgRoot.close(); refresh(); };
+    list.appendChild(d);
+  }
+  $('fRootErr').textContent = '';
+  dlgRoot.showModal();
+};
+
+$('btnSetRoot').onclick = async () => {
+  try {
+    await api('/settings/root', 'PUT', { path: $('fRootPath').value, create_if_missing: $('fRootCreate').checked });
+    dlgRoot.close();
+  } catch (e) { $('fRootErr').textContent = e.message; }
+  refresh();
+};
+
+// ---------------- flag / 删除 ----------------
+$('btnSetFlag').onclick = async () => {
+  if (!flagTarget) return;
+  await api(`/challenges/${flagTarget.id}/flag`, 'POST', { flag: $('fFlag').value });
+  dlgFlag.close();
+  refresh();
+};
+
+$('btnDelKeep').onclick = () => act_delete(false);
+$('btnDelAll').onclick = () => {
+  if (!delTarget) return;
+  if (!confirm(`确认彻底删除 ${delTarget.name}？目录 ${delTarget.workdir} 将被 rm -rf，不可恢复！`)) return;
+  act_delete(true);
+};
+async function act_delete(files) {
+  if (!delTarget) return;
+  try { await api(`/challenges/${delTarget.id}?files=${files}`, 'DELETE'); dlgDel.close(); }
+  catch (e) { alert(e.message); }
+  refresh();
+}
+
+refresh();
+setInterval(refresh, 3000);
+</script>

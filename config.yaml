@@ -1,0 +1,30 @@
+# ubz-ctf 配置
+# 注意: 根目录不在此配置 —— 在 Web 界面切换, 存于 ~/.ubz-ctf/state.json
+
+panes_per_window: 4          # 每 4 个 pane 一组(tiled 平铺); 超出在同一个 session 里开新标签页(tmux window); 0 = 全部平铺在唯一 window
+poll_interval: 4             # monitor 轮询间隔(秒)
+terminal_emulator: gnome-terminal   # 人工接管时弹的终端: gnome-terminal/konsole/kitty/alacritty/wezterm/xterm
+default_harness: codex
+
+# capture-pane 内容中出现这些关键词时标记 need_help (misc 人工求助通道)
+help_keywords:
+  - 需要你
+  - 需要人工
+  - 人工介入
+  - 请帮我
+  - 帮我确认
+  - 肉眼
+
+download_cookies: ''         # 需要登录的题目平台, 把 Cookie 头填这里
+zip_passwords:               # 加密 zip 尝试密码列表
+  - infected
+
+# harness 启动命令表, Web 表单的 harness 下拉框动态取自这里, 可自行加行
+harnesses:
+  codex:  'codex --sandbox danger-full-access --ask-for-approval never'
+  claude: 'claude --dangerously-skip-permissions'
+
+# 进程退出后的恢复命令
+resume_commands:
+  codex:  'codex --sandbox danger-full-access --ask-for-approval never resume --last'
+  claude: 'claude -c --dangerously-skip-permissions'
