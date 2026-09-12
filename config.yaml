@@ -20,11 +20,18 @@ zip_passwords:               # 加密 zip 尝试密码列表
   - infected
 
 # harness 启动命令表, Web 表单的 harness 下拉框动态取自这里, 可自行加行
+# dsh: DeepSeek Harness TUI; DSH_PERMISSION_MODE=danger-full-access = 沙箱全开+审批全免
 harnesses:
   codex:  'codex --sandbox danger-full-access --ask-for-approval never'
   claude: 'claude --dangerously-skip-permissions'
+  cursor: 'agent --force --trust'
+  dsh:    'DSH_PERMISSION_MODE=danger-full-access dsh-tui'
 
 # 进程退出后的恢复命令
+# dsh 的 --resume 不带 id 时读全局 ~/.dsh-tui/resume.txt(最后一次退出的会话),
+# 多题并行会串题, 所以走 bin/dsh-resume 按当前目录解析出自己的会话 id 再恢复
 resume_commands:
   codex:  'codex --sandbox danger-full-access --ask-for-approval never resume --last'
   claude: 'claude -c --dangerously-skip-permissions'
+  cursor: 'agent --continue --force --trust'
+  dsh:    'DSH_PERMISSION_MODE=danger-full-access ~/unboundz-ctf/bin/dsh-resume'

@@ -218,7 +218,7 @@ async def resume(cid: str):
             # 先记基线再发命令: 命令发出后 harness 可能秒退, 之后再记就把新退出吞了
             ch.exit_seen = tmuxctl.exit_mark_count(pane)
             tmuxctl.send_command(pane, f"{cmd}; echo {tmuxctl.EXIT_MARK}$?")
-            tmuxctl.wait_harness_ready(pane)
+            harness.wait_ready(pane, ch.harness)
         else:
             tm = await asyncio.to_thread(
                 tmuxctl.allocate_pane, ch.tmux["session"], ch.name,
@@ -226,7 +226,7 @@ async def resume(cid: str):
             ch.tmux.update(tm)
             pane = tm["pane"]
             tmuxctl.launch_harness(pane, cmd)
-            tmuxctl.wait_harness_ready(pane)
+            harness.wait_ready(pane, ch.harness)
             ch.exit_seen = 0
         if fresh_start:
             prompt_file = prompts.write_prompt_file(ch)
@@ -516,7 +516,7 @@ async def _launch(ch: store.Challenge) -> None:
                 int(CONFIG.get("panes_per_window", 4)))
             cmd = harness.launch_command(CONFIG, ch.harness)
             tmuxctl.launch_harness(tm["pane"], cmd)
-            tmuxctl.wait_harness_ready(tm["pane"])
+            harness.wait_ready(tm["pane"], ch.harness)
             tmuxctl.send_text(tm["pane"],
                               (Path(ch.workdir) / "prompt.md").read_text(
                                   encoding="utf-8"))

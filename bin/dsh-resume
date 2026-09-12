@@ -1,0 +1,102 @@
+#!/usr/bin/env python3
+"""ubz-ctf: dsh-tui 恢复启动器 (config.yaml resume_commands.dsh 指向本脚本)。
+
+为什么需要它: dsh-tui 裸 `--resume` 读的是全局 ~/.dsh-tui/resume.txt
+(最后一次退出的会话), 不按 cwd 过滤 —— 多题并行时 A 题的 pane 会
+恢复出 B 题的会话。本脚本按**当前工作目录**解析出该目录最近一次的
+dsh 会话 id, 再 exec `dsh-tui --resume <id>`; 找不到会话则裸启动。
+
+数据源 (都在 $DSH_HOME, 缺省 ~/.dsh):
+  1. storages/session_projcache/sessions/<id>.json —— 未压缩的投影缓存,
+     record.identity 里有 cwd 和 createdAt, 首选
+  2. sessions/<workspace>/<id>/session.v*.jsonl[.zstd] —— 会话日志首行
+     {"type":"session",...,"cwd":...}; 压缩的用 zstdcat 只取首行, 兜底
+"""
+
+from __future__ import annotations
+
+import glob
+import json
+import os
+import shutil
+import subprocess
+import sys
+
+
+def _dsh_home() -> str:
+    home = os.environ.get("DSH_HOME", "").strip()
+    return home or os.path.expanduser("~/.dsh")
+
+
+def _newest_from_projcache(cwd: str) -> str:
+    """投影缓存里挑 cwd 匹配、createdAt 最新的会话 id。"""
+    best: tuple[float, str] = (0.0, "")
+    pat = os.path.join(_dsh_home(), "storages", "session_projcache",
+                       "sessions", "*.json")
+    for path in glob.glob(pat):
+        try:
+            with open(path, encoding="utf-8") as f:
+                ident = json.load(f).get("record", {}).get("identity", {})
+        except (OSError, ValueError):
+            continue
+        if ident.get("cwd") != cwd:
+            continue
+        sid = os.path.splitext(os.path.basename(path))[0]
+        best = max(best, (float(ident.get("createdAt") or 0), sid))
+    return best[1]
+
+
+def _log_first_line(path: str) -> str:
+    if path.endswith(".zstd"):
+        zstdcat = shutil.which("zstdcat")
+        if not zstdcat:
+            return ""
+        try:
+            proc = subprocess.run(
+                [zstdcat, "--", path], capture_output=True, text=True,
+                timeout=10)
+        except (OSError, subprocess.TimeoutExpired):
+            return ""
+        return proc.stdout.splitlines()[0] if proc.stdout else ""
+    try:
+        with open(path, encoding="utf-8", errors="replace") as f:
+            return f.readline()
+    except OSError:
+        return ""
+
+
+def _newest_from_logs(cwd: str) -> str:
+    """兜底: 直接读会话日志首行 (session header 里有 cwd/createdAt)。"""
+    best: tuple[float, str] = (0.0, "")
+    roots = [os.path.join(_dsh_home(), "sessions"),
+             os.path.expanduser("~/.dsh-tui/sessions")]
+    for root in roots:
+        for path in glob.glob(os.path.join(
+                root, "*", "*", "session.v*.jsonl*")):
+            line = _log_first_line(path)
+            if not line:
+                continue
+            try:
+                head = json.loads(line)
+            except ValueError:
+                continue
+            if head.get("type") != "session" or head.get("cwd") != cwd:
+                continue
+            best = max(best, (float(head.get("createdAt") or 0),
+                              os.path.basename(os.path.dirname(path))))
+    return best[1]
+
+
+def main() -> None:
+    cwd = os.getcwd()
+    sid = _newest_from_projcache(cwd) or _newest_from_logs(cwd)
+    argv = ["dsh-tui", "--resume", sid] if sid else ["dsh-tui"]
+    if sid:
+        print(f"[dsh-resume] 恢复本目录会话 {sid}", flush=True)
+    else:
+        print("[dsh-resume] 本目录没有历史会话, 全新启动", flush=True)
+    os.execvp(argv[0], argv)
+
+
+if __name__ == "__main__":
+    sys.exit(main())
