@@ -116,6 +116,23 @@ def session_name_for_root(root: str) -> str:
     return "ctf-" + re.sub(r"[^A-Za-z0-9_-]", "-", base)
 
 
+# ---------------------------------------------------------------- 赛事平台 token
+
+def get_contest_token(adapter_id: str) -> str:
+    return (_load_state().get("contest_tokens") or {}).get(adapter_id, "")
+
+
+def set_contest_token(adapter_id: str, token: str) -> None:
+    """保存/清除某赛事适配器的队伍 token (state.json -> contest_tokens)。"""
+    state = _load_state()
+    tokens = state.setdefault("contest_tokens", {})
+    if token:
+        tokens[adapter_id] = token
+    else:
+        tokens.pop(adapter_id, None)
+    _save_state(state)
+
+
 # ---------------------------------------------------------------- challenge
 
 @dataclass
@@ -141,6 +158,7 @@ class Challenge:
     supplements: list[dict] = field(default_factory=list)  # 后续补充记录 [{ts, text}]
     download_status: str = ""      # "" | pending | done | partial | failed
     download_errors: list[str] = field(default_factory=list)
+    contest: dict[str, Any] = field(default_factory=dict)  # 赛事平台绑定 {adapter, question_id, interactive, ...}, 空=非平台题
     created_at: float = field(default_factory=time.time)
 
     @property

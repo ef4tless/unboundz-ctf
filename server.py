@@ -12,10 +12,11 @@ import time
 from contextlib import asynccontextmanager
 from pathlib import Path
 
-from fastapi import FastAPI, File, HTTPException, UploadFile
-from fastapi.responses import FileResponse
+from fastapi import FastAPI, File, HTTPException, Request, UploadFile
+from fastapi.responses import FileResponse, JSONResponse
 from pydantic import BaseModel
 
+from core import contest as contest_mod
 from core import downloader, harness, monitor, prompts, store, tmuxctl
 
 PROJECT_DIR = Path(__file__).resolve().parent
@@ -34,6 +35,11 @@ async def lifespan(_app: FastAPI):
 
 
 app = FastAPI(title="ubz-ctf", lifespan=lifespan)
+
+
+@app.exception_handler(contest_mod.ContestError)
+async def _contest_error(_req: Request, e: contest_mod.ContestError):
+    return JSONResponse(status_code=400, content={"detail": str(e)})
 
 
 # ---------------------------------------------------------------- models
@@ -72,6 +78,17 @@ class PatchIn(BaseModel):
     target: str | None = None
     info: str | None = None
     message: str = ""
+
+
+class TokenIn(BaseModel):
+    token: str
+
+
+class ImportIn(BaseModel):
+    question_ids: list[str]
+    auto_launch: bool = False
+    harness: str = ""                      # 整批默认 harness
+    harnesses: dict[str, str] = {}         # 逐题覆盖: question_id -> harness
 
 
 # ---------------------------------------------------------------- settings
@@ -349,6 +366,131 @@ def get_output(cid: str, lines: int = 80):
         return {"output": tmuxctl.capture(pane, lines=lines), "live": True}
     except tmuxctl.TmuxError as e:
         return {"output": "", "live": False, "error": str(e)}
+
+
+# ---------------------------------------------------------------- 赛事平台兼容层
+
+@app.get("/api/contests")
+def list_contests():
+    """contests/ 下的赛事适配器清单 + 是否已保存 token。"""
+    out = []
+    for a in contest_mod.list_adapters():
+        s = contest_mod.adapter_summary(a)
+        s["has_token"] = bool(store.get_contest_token(a["id"]))
+        out.append(s)
+    return {"contests": out}
+
+
+@app.get("/api/contests/{cid}/questions")
+def contest_questions(cid: str, token: str = ""):
+    """从平台拉取题目列表; 拉取成功后保存 token, 并标注每题本地是否已导入。"""
+    adapter = contest_mod.load_adapter(cid)
+    token = token.strip() or store.get_contest_token(cid)
+    if not token:
+        raise HTTPException(400, "未提供队伍 token")
+    questions = contest_mod.fetch_questions(adapter, token)
+    store.set_contest_token(cid, token)
+
+    bound: dict[str, dict] = {}
+    root = store.get_root()
+    if root:
+        for ch in store.list_challenges(root):
+            c = ch.contest or {}
+            if c.get("adapter") == cid and c.get("question_id"):
+                bound[c["question_id"]] = {
+                    "id": ch.id, "name": ch.name, "status": ch.status, "flag": ch.flag,
+                }
+    for q in questions:
+        q["local"] = bound.get(q["question_id"])
+    return {"contest": contest_mod.adapter_summary(adapter), "questions": questions}
+
+
+@app.post("/api/contests/{cid}/import", status_code=201)
+async def import_questions(cid: str, body: ImportIn):
+    """把平台题目批量导入为本地题目 (去重: 同 question_id 已存在则跳过)。"""
+    adapter = contest_mod.load_adapter(cid)
+    token = store.get_contest_token(cid)
+    if not token:
+        raise HTTPException(400, "未保存 token, 请先拉取一次题目")
+    root = store.get_root()
+    if not root:
+        raise HTTPException(400, "未设置根目录, 请先 PUT /api/settings/root")
+
+    questions = {q["question_id"]: q for q in contest_mod.fetch_questions(adapter, token)}
+    existing = {
+        (ch.contest or {}).get("question_id"): ch
+        for ch in store.list_challenges(root)
+        if (ch.contest or {}).get("adapter") == cid
+    }
+    created, skipped, errors = [], [], []
+    for qid in body.question_ids:
+        q = questions.get(qid)
+        if q is None:
+            errors.append(f"{qid}: 平台列表中不存在")
+            continue
+        if qid in existing:
+            skipped.append({"question_id": qid, "name": existing[qid].name})
+            continue
+        kw = contest_mod.import_payload(adapter, q)
+        binding = kw.pop("contest")
+        try:
+            ch = store.create_challenge(
+                root,
+                harness=(body.harnesses.get(qid) or body.harness
+                         or CONFIG.get("default_harness", "codex")),
+                **kw)
+            ch.contest = binding
+            if q.get("is_solved"):
+                ch.note = "平台显示该题已解出"
+            if ch.attachment_urls:
+                ch.status = "downloading"
+                ch.save()
+                _download_tasks[ch.id] = asyncio.create_task(
+                    asyncio.to_thread(downloader.download_all, ch, CONFIG))
+            else:
+                ch.status = "ready"
+                ch.save()
+            if body.auto_launch:
+                await _launch(ch)
+                ch = store.Challenge.load(ch.meta_path)
+            created.append({"id": ch.id, "name": ch.name, "question_id": qid})
+        except Exception as e:  # 批量导入单题失败不拖垮整批
+            errors.append(f"{q.get('title') or qid}: {e}")
+    return {"created": created, "skipped": skipped, "errors": errors}
+
+
+@app.post("/api/contests/{cid}/questions/{qid}/reset")
+def contest_reset(cid: str, qid: str):
+    """重置平台容器环境 (仅容器题支持)。"""
+    adapter = contest_mod.load_adapter(cid)
+    token = store.get_contest_token(cid)
+    if not token:
+        raise HTTPException(400, "未保存 token, 请先在「赛事平台」拉取一次题目")
+    return contest_mod.reset_env(adapter, token, qid)
+
+
+@app.post("/api/challenges/{cid}/submit_flag")
+def submit_flag(cid: str, body: FlagIn):
+    """把 flag 提交到题目绑定的赛事平台; 平台判对才本地落盘并标 solved。"""
+    ch = _get(cid)
+    binding = ch.contest or {}
+    if not binding.get("question_id"):
+        raise HTTPException(400, "该题未绑定赛事平台(非平台导入), 无法提交")
+    adapter = contest_mod.load_adapter(binding.get("adapter") or "")
+    token = store.get_contest_token(adapter["id"])
+    if not token:
+        raise HTTPException(400, "未保存平台 token, 请先在「赛事平台」拉取一次题目")
+    flag = body.flag.strip()
+    if not flag:
+        raise HTTPException(400, "flag 为空")
+    result = contest_mod.submit_answer(adapter, token, binding["question_id"], flag)
+    if result["ok"]:
+        ch.flag = flag
+        ch.flag_candidate = ""
+        ch.status = "solved"
+        ch.save()
+    result["saved"] = bool(result["ok"])
+    return result
 
 
 # ---------------------------------------------------------------- launch pipeline

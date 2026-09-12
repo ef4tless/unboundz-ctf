@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import asyncio
 import re
+from pathlib import Path
 
 from . import store, tmuxctl
 
@@ -27,6 +28,7 @@ class Monitor:
         self.interval = float(config.get("poll_interval", 4))
         self.help_keywords = config.get("help_keywords", [])
         self.elsewhere_running = 0
+        self._prompt_cache: dict[str, str] = {}  # workdir -> 注入的 prompt.md 原文
         self._task: asyncio.Task | None = None
 
     # ------------------------------------------------------------ lifecycle
@@ -96,7 +98,7 @@ class Monitor:
                         ch.status = "exited"
                         dirty = True
                     elif (ch.status == "running"
-                          and self._agent_asking_help(text)):
+                          and self._agent_asking_help(text, ch)):
                         ch.status = "need_help"
                         dirty = True
                 elif ch.status == "exited":
@@ -119,13 +121,29 @@ class Monitor:
         if dirty:
             ch.save()
 
-    def _agent_asking_help(self, text: str) -> bool:
-        """只看最近输出里的 agent 行(TUI 行首 •/⏺); 找不到这类行(非 TUI harness)才看全部。"""
+    def _agent_asking_help(self, text: str, ch: store.Challenge) -> bool:
+        """只看最近输出里的 agent 行(TUI 行首 •/⏺); 找不到这类行(非 TUI harness)才看全部。
+        cursor 等无行首标志的 harness 会把提示词原样回显成普通行, 所以再剔除
+        注入的 prompt.md 原文行, 否则 misc 模板自带的"需要人工"会被误判成求助。"""
         lines = [l for l in text.rstrip().splitlines() if l.strip()]
         tail = lines[-20:]
         agent = [l for l in tail if l.lstrip().startswith(AGENT_LINE_PREFIXES)]
         haystack = "\n".join(agent or tail)
+        prompt = self._prompt_text(ch)
+        if prompt:
+            haystack = "\n".join(l for l in haystack.splitlines()
+                                 if l.strip() not in prompt)
         return any(k in haystack for k in self.help_keywords)
+
+    def _prompt_text(self, ch: store.Challenge) -> str:
+        """题目注入的 prompt.md 原文 (创建后不变, 按 workdir 缓存)。"""
+        if ch.workdir not in self._prompt_cache:
+            try:
+                self._prompt_cache[ch.workdir] = (
+                    Path(ch.workdir) / "prompt.md").read_text(encoding="utf-8")
+            except OSError:
+                self._prompt_cache[ch.workdir] = ""
+        return self._prompt_cache[ch.workdir]
 
     # ------------------------------------------------------------ helpers
 

@@ -4,11 +4,13 @@ harness 只是"一条启动命令", 在 config.yaml 的 harnesses 表里配置,
 名字随意 (codex/claude/自定义都行), Web 表单的 harness 下拉框动态取自该表。
 resume_commands 表同理, 用于 pane 里进程退出后的恢复。
 
-resume 恢复实测行为 (codex 0.153 / claude 2.1):
+resume 恢复实测行为 (codex 0.153 / claude 2.1 / cursor 2026.09):
 - codex resume --last: 默认按 cwd 过滤选最近会话; 有未完成 goal 时弹
   "Resume paused goal?" (默认项即 Resume goal, 由 tmuxctl.DIALOG_RULES 处理),
   确认后 goal active 自动继续干活; 无 goal 的会话恢复后停在输入框, 需要推一下
 - claude -c: 恢复当前目录最近会话, 停在输入框, 需要推一下
+- agent --continue: 恢复当前目录最近会话 (等效于退出时提示的 agent --resume=<id>),
+  停在输入框, 需要推一下; --trust 跳过新目录信任弹窗, --force 免逐条批准命令
 """
 
 from __future__ import annotations
@@ -41,8 +43,10 @@ def resume_command(config: dict, harness: str) -> str:
 def nudge_to_continue(pane_id: str, harness_name: str, timeout: float = 20.0) -> None:
     """resume 后让 agent 真正继续干活的小状态机:
     - 出现 "Resume paused goal?" -> 回车选默认的 Resume goal (有 goal 才弹, 无 goal 不弹不按)
-    - 状态栏出现 Pursuing goal / Working -> goal 已激活在自动追, 不打扰
-    - 空闲输入框(›/❯)稳定 4s 才判定无弹窗 -> 发续跑指令
+    - 状态栏出现 Pursuing goal / Working ( -> goal 已激活在自动追, 不打扰
+    - 输入行右侧出现 ctrl+c to stop -> cursor 正在跑, 不打扰
+      (cursor 忙时输入框同样有 → 提示符, 必须先判忙再判闲)
+    - 空闲输入框(›/❯/→)稳定 4s 才判定无弹窗 -> 发续跑指令
       (goal 弹窗在历史回放后才出现, 实测约 5-6s, 不能看到输入框就立刻发)
     """
     deadline = time.time() + timeout
@@ -59,9 +63,10 @@ def nudge_to_continue(pane_id: str, harness_name: str, timeout: float = 20.0) ->
             time.sleep(1)  # 弹窗在但标志行被顶出尾部, 等下一轮
             idle_streak = 0
             continue
-        if "Pursuing goal" in tail or "Working (" in tail:
+        if ("Pursuing goal" in tail or "Working (" in tail
+                or "ctrl+c to stop" in tail):
             return
-        if any(l.lstrip().startswith(("›", "❯")) for l in tail_lines):
+        if any(l.lstrip().startswith(("›", "❯", "→")) for l in tail_lines):
             idle_streak += 1
             if idle_streak >= 4:
                 break

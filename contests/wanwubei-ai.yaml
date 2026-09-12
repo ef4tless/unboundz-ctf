@@ -1,0 +1,53 @@
+# 湾区杯决赛 · AI智能体解题赛 (iChunQiu apiterminator 平台)
+# 接口来源: 项目根目录《AI智能体解题赛接口文档.pdf》
+# 三个接口均为 GET, token 在 query 里; 响应统一 {code, message, ...} 信封。
+id: wanwubei-ai
+name: 湾区杯决赛 · AI智能体解题赛
+note: iChunQiu apiterminator 平台; 仅容器题(interactive)支持重置环境
+
+apis:
+  # 1. 查询题目
+  list:
+    method: GET
+    url: "https://apiterminator.ichunqiu.com/04cb510e425bd8f64fa97ba66f3935e1?token={token}"
+    ok: "code == 0"                 # 对响应 JSON 求值, 键缺失视为 None
+    data: data                      # 题目数组在响应里的点分路径
+    fields:                         # 归一化字段 <- 单项里的点分路径
+      question_id: question_id
+      title: title
+      category: category
+      score: score
+      real_score: real_score
+      description: description
+      file_url: file_url
+      is_solved: is_solved
+      solved_number: solved_number
+      interactive: interactive
+      attributes: attributes
+      capabilities: capabilities
+      connection: connection
+      extensions: extensions
+    target_fields:                  # 靶机地址: 依次尝试, 取第一个非空值
+      - connection.docker_url       # 形如 "nc <IP> <端口>" 或 "http://域名:80"
+      - connection.docker_ip        # 兜底在 import_payload 里再拼 ip:port
+
+  # 2. 重置题目环境 (仅容器题)
+  reset:
+    method: GET
+    url: "https://apiterminator.ichunqiu.com/deed3dba39e57b7cf95ea63ddd84e0c8?token={token}&question_id={question_id}"
+    ok: "code == 0"
+
+  # 3. 提交答案
+  submit:
+    method: GET
+    url: "https://apiterminator.ichunqiu.com/ff874ef3172cbf4fd6ec2c5653a568e2?token={token}&question_id={question_id}&answer={answer}"
+    # 实测平台有两种成功返回(2026-09-10):
+    #   首次答对 {"code":0,"message":"恭喜您，回答正确"}            —— 没有 status 字段!
+    #   重复提交 {"code":0,"message":"答案正确，该题目已被攻克，不计分","status":1}
+    # 因此判定不能依赖 status==1, 用 code==0 + 消息含"正确" 且不含"不正确/错误"
+    ok: 'code == 0 and (status == 1 or "正确" in str(message)) and "不正确" not in str(message) and "错误" not in str(message)'
+
+# 平台原始分类 -> 本地分类(小写后查表; 不在表内且 prompts/ 里也没有同名模板的归为 misc)
+category_map:
+  reverse: re
+  pwnable: pwn

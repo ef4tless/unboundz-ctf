@@ -116,5 +116,8 @@ def download_all(ch: Challenge, config: dict) -> Challenge:
         ch.download_status = "partial"
     else:
         ch.download_status = "done"
+    if ch.status == "downloading":
+        # 不 auto_launch 的题下载完要回到 ready, 否则会一直卡在「下载中」
+        ch.status = "ready"
     ch.save()
     return ch

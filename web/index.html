@@ -25,7 +25,7 @@
   header {
     min-height: 58px; display: flex; align-items: center; gap: 12px; padding: 10px 22px;
     border-bottom: 1px solid rgba(66, 78, 98, .55); position: sticky; top: 0;
-    background: rgba(9, 12, 18, .84); backdrop-filter: blur(16px); z-index: 5;
+    background: rgba(9, 12, 18, .96); z-index: 5;
     box-shadow: 0 8px 28px rgba(0, 0, 0, .2);
   }
   header h1 { font-size: 18px; margin: 0; letter-spacing: .6px; white-space: nowrap; }
@@ -34,17 +34,14 @@
     max-width: min(62vw, 720px); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
     background: rgba(28, 35, 48, .8); border: 1px solid var(--border); border-radius: 8px;
     padding: 6px 10px; font-size: 12px; cursor: pointer; color: var(--dim);
-    transition: border-color .15s ease, color .15s ease, background .15s ease;
   }
   .chip:hover { border-color: var(--accent); color: var(--fg); background: var(--panel2); }
   .spacer { flex: 1; }
   button {
     min-height: 28px; background: var(--panel2); color: var(--fg); border: 1px solid var(--border);
     border-radius: 7px; padding: 4px 9px; font-size: 11px; font-weight: 550; cursor: pointer;
-    transition: border-color .15s ease, background .15s ease, color .15s ease, transform .15s ease;
   }
   button:hover:not(:disabled) { border-color: #4b6280; background: #232c3b; }
-  button:active:not(:disabled) { transform: translateY(1px); }
   button:focus-visible, .chip:focus-visible, .target:focus-visible, .flag:focus-visible, pre.output:focus-visible {
     outline: 2px solid var(--accent); outline-offset: 2px;
   }
@@ -78,9 +75,8 @@
     border: 1px solid var(--border); border-left: 3px solid var(--gray); border-radius: 11px;
     padding: 11px 12px 10px; display: flex; flex-direction: column; gap: 7px;
     box-shadow: 0 10px 24px rgba(0, 0, 0, .13);
-    transition: border-color .15s ease, box-shadow .15s ease, transform .15s ease;
   }
-  .tile:hover { border-top-color: #354258; border-right-color: #354258; border-bottom-color: #354258; box-shadow: 0 13px 30px rgba(0, 0, 0, .22); transform: translateY(-1px); }
+  .tile:hover { border-top-color: #354258; border-right-color: #354258; border-bottom-color: #354258; }
   .tile.solved { border-left-color: var(--green); }
   .tile.need_help { border-left-color: var(--orange); }
   .tile.exited, .tile.failed, .tile.pane_gone { border-left-color: var(--red); }
@@ -98,7 +94,6 @@
     flex: none; min-height: 25px; padding: 5px 7px; border-radius: 6px; background: rgba(9, 12, 18, .42);
     border: 1px solid transparent; font: 10.5px/13px ui-monospace, SFMono-Regular, Consolas, monospace;
     color: var(--dim); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; cursor: pointer;
-    transition: color .15s ease, border-color .15s ease;
   }
   .target:hover { color: var(--fg); border-color: var(--border); }
   .note { flex: none; max-height: 34px; overflow: hidden; font-size: 11px; line-height: 16px; color: var(--orange); overflow-wrap: anywhere; }
@@ -114,12 +109,22 @@
     color: #9da9ba; font: 10.5px/1.45 ui-monospace, SFMono-Regular, Consolas, monospace;
     white-space: pre-wrap; overflow-wrap: anywhere; scrollbar-color: #354157 transparent; scrollbar-width: thin;
   }
-  .actions { flex: none; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 5px; }
+  .actions { flex: none; display: grid; grid-template-columns: repeat(auto-fit, minmax(58px, 1fr)); gap: 5px; }
   .actions button { width: 100%; min-width: 0; padding-inline: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+  /* 赛事平台对话框的题目行 */
+  .q-row { display: grid; grid-template-columns: 22px minmax(0, 1fr) auto auto; gap: 8px; align-items: center; padding: 7px 6px; border-bottom: 1px solid var(--border-soft); font-size: 12px; }
+  .q-row:hover { background: var(--panel2); }
+  .q-row.imported { opacity: .62; }
+  .q-title { font-weight: 650; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .q-sub { color: var(--dim); font-size: 11px; margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .q-tag { font-size: 10px; padding: 1px 6px; border-radius: 999px; border: 1px solid var(--border); color: var(--dim); white-space: nowrap; }
+  .q-tag.solved { color: #69e49b; border-color: #27894f; }
+  .q-tag.docker { color: #79bbff; border-color: #397fbd; }
 
   .empty-hint { color: var(--dim); text-align: center; margin-top: 80px; }
   dialog { background: var(--panel-raised); color: var(--fg); border: 1px solid #374359; border-radius: 14px; padding: 20px; width: min(640px, 92vw); box-shadow: 0 24px 80px rgba(0, 0, 0, .55); }
-  dialog::backdrop { background: rgba(0, 0, 0, .68); backdrop-filter: blur(3px); }
+  dialog::backdrop { background: rgba(0, 0, 0, .68); }
   dialog h2 { margin-top: 0; font-size: 16px; }
   label { display: block; font-size: 13px; color: var(--dim); margin: 10px 0 4px; }
   input[type=text], textarea, select { width: 100%; background: #101620; border: 1px solid var(--border); border-radius: 7px; color: var(--fg); padding: 8px 10px; font-size: 13px; font-family: inherit; outline: none; }
@@ -154,6 +159,7 @@
   <span class="chip" id="rootChip" role="button" tabindex="0" title="点击切换赛事根目录">未设置根目录</span>
   <span id="elsewhere"></span>
   <span class="spacer"></span>
+  <button id="btnContest">🏆 赛事平台</button>
   <button class="primary" id="btnNew">+ 新建题目</button>
 </header>
 
@@ -206,8 +212,11 @@
   <h2>登记 / 修改 flag</h2>
   <input type="text" id="fFlag" placeholder="flag{...}">
   <p style="font-size:12px;color:var(--dim)">保存非空 flag 会标记为「已解出」；清空后保存会撤销该状态。</p>
+  <p style="font-size:12px;color:var(--dim)" id="fFlagHint" hidden>该题绑定了赛事平台：「提交到平台」会先让平台判题，判对才保存并标记已解出。</p>
+  <div class="err" id="fFlagErr"></div>
   <div class="modal-actions">
     <button onclick="dlgFlag.close()">取消</button>
+    <button id="btnSubmitFlag" hidden>提交到平台</button>
     <button class="primary" id="btnSetFlag">保存</button>
   </div>
 </dialog>
@@ -240,13 +249,43 @@
   </div>
 </dialog>
 
+<!-- 赛事平台 -->
+<dialog id="dlgContest" style="width:min(760px, 94vw)">
+  <h2>赛事平台</h2>
+  <div style="display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap">
+    <div style="flex:1;min-width:190px">
+      <label style="margin-top:0">比赛（适配器 = contests/ 下的 yaml）</label>
+      <select id="cAdapter"></select>
+    </div>
+    <div style="flex:1.4;min-width:220px">
+      <label style="margin-top:0">队伍 token</label>
+      <input type="text" id="cToken" autocomplete="off" spellcheck="false">
+    </div>
+    <button class="primary" id="btnFetchQ">拉取题目</button>
+  </div>
+  <div id="cNote" style="font-size:12px;color:var(--dim);margin-top:8px"></div>
+  <div class="err" id="cErr"></div>
+  <div id="cList" style="margin-top:10px;max-height:44vh;overflow:auto"></div>
+  <div class="modal-actions" style="align-items:center;justify-content:flex-start;gap:14px">
+    <label style="margin:0;display:flex;gap:5px;align-items:center;color:var(--dim)"><input type="checkbox" id="cCheckAll"> 全选</label>
+    <label style="margin:0;display:flex;gap:5px;align-items:center;color:var(--dim)" title="批量导入时每题都会开 pane 起 harness"><input type="checkbox" id="cAutoLaunch"> 导入后立即启动</label>
+    <label style="margin:0;display:flex;gap:5px;align-items:center;color:var(--dim)" title="一键把下面所有未导入题的 harness 设为同一个">全部设为 <select id="cHarness" style="width:auto"></select></label>
+    <span class="spacer"></span>
+    <button onclick="dlgContest.close()">关闭</button>
+    <button class="primary" id="btnImport">导入所选</button>
+  </div>
+</dialog>
+
 <!-- 全局隐藏的文件选择器: "📎 附件"用 -->
 <input type="file" id="fUpload" multiple hidden>
 
 <script>
 const $ = id => document.getElementById(id);
-const dlgNew = $('dlgNew'), dlgRoot = $('dlgRoot'), dlgFlag = $('dlgFlag'), dlgDel = $('dlgDel'), dlgTarget = $('dlgTarget');
+const dlgNew = $('dlgNew'), dlgRoot = $('dlgRoot'), dlgFlag = $('dlgFlag'), dlgDel = $('dlgDel'), dlgTarget = $('dlgTarget'), dlgContest = $('dlgContest');
 let cfg = null, templates = {}, curCat = null, flagTarget = null, delTarget = null, uploadTarget = null, tgtCh = null;
+let contests = [], contestQs = [], contestId = null;
+let boardSignature = '';
+const outputScroll = new Map();
 
 async function api(path, method = 'GET', body = null) {
   const opt = { method, headers: { 'Content-Type': 'application/json' } };
@@ -265,6 +304,24 @@ const STATUS_LABEL = {
 const CAT_ORDER = ['web', 'pwn', 're', 'misc', 'crypto', 'custom'];
 const CAT_COLOR = { web: 'var(--accent)', pwn: 'var(--red)', re: 'var(--purple)', misc: 'var(--orange)', crypto: 'var(--green)', custom: 'var(--gray)' };
 
+function rememberOutputScroll(board) {
+  for (const pre of board.querySelectorAll('pre.output[data-challenge-id]')) {
+    const bottom = Math.max(0, pre.scrollHeight - pre.clientHeight);
+    outputScroll.set(pre.dataset.challengeId, {
+      top: pre.scrollTop,
+      atBottom: bottom - pre.scrollTop <= 10,
+    });
+  }
+}
+
+function restoreOutputScroll(board) {
+  for (const pre of board.querySelectorAll('pre.output[data-challenge-id]')) {
+    const saved = outputScroll.get(pre.dataset.challengeId);
+    const bottom = Math.max(0, pre.scrollHeight - pre.clientHeight);
+    pre.scrollTop = !saved || saved.atBottom ? bottom : Math.min(saved.top, bottom);
+  }
+}
+
 async function refresh() {
   let data;
   try { data = await api('/challenges'); }
@@ -274,12 +331,18 @@ async function refresh() {
   $('elsewhere').textContent = data.elsewhere_running ? `其他赛事还有 ${data.elsewhere_running} 题在跑` : '';
   $('emptyHint').hidden = !root || data.challenges.length > 0;
 
+  // 没有数据变化时不重建卡片，避免终端阅读位置和文本选择被刷新打断。
+  const nextSignature = JSON.stringify({ root, challenges: data.challenges });
+  if (nextSignature === boardSignature) return;
+
   const groups = {};
   for (const ch of data.challenges) (groups[ch.category] ??= []).push(ch);
   const cats = [...CAT_ORDER, ...Object.keys(groups).filter(c => !CAT_ORDER.includes(c))]
     .filter(c => groups[c] && groups[c].length);
 
   const board = $('board');
+  rememberOutputScroll(board);
+  boardSignature = nextSignature;
   board.innerHTML = '';
   for (const cat of cats) {
     const list = groups[cat];
@@ -299,6 +362,7 @@ async function refresh() {
     sec.appendChild(tiles);
     board.appendChild(sec);
   }
+  restoreOutputScroll(board);
 }
 
 // 小方块直接显示全部信息: 不折叠、不缩略、按钮在块上
@@ -310,6 +374,14 @@ function renderTile(ch) {
   head.className = 't-head';
   head.innerHTML = `<span class="t-name"></span><span class="badge">${ch.harness}</span><span class="status ${ch.status}">${STATUS_LABEL[ch.status] || ch.status}</span>`;
   head.querySelector('.t-name').textContent = ch.name;
+  const bound = !!(ch.contest && ch.contest.question_id);
+  if (bound) {
+    const b = document.createElement('span');
+    b.className = 'badge';
+    b.textContent = '🏆';
+    b.title = `平台题: ${ch.contest.adapter_name || ch.contest.adapter} · question_id=${ch.contest.question_id}`;
+    head.insertBefore(b, head.querySelector('.status'));
+  }
   if (!ch.target && ['web', 'pwn'].includes(ch.category)) {
     const b = document.createElement('span');
     b.className = 'badge';
@@ -352,8 +424,17 @@ function renderTile(ch) {
   const pre = document.createElement('pre');
   pre.className = 'output';
   pre.tabIndex = 0;
+  pre.dataset.challengeId = ch.id;
   pre.setAttribute('aria-label', `${ch.name} 最近输出`);
+  pre.title = '停在底部时跟随最新输出；向上滚动后保持当前阅读位置';
   pre.textContent = ch.last_output || '（暂无输出）';
+  pre.onscroll = () => {
+    const bottom = Math.max(0, pre.scrollHeight - pre.clientHeight);
+    outputScroll.set(ch.id, {
+      top: pre.scrollTop,
+      atBottom: bottom - pre.scrollTop <= 10,
+    });
+  };
   tile.appendChild(pre);
 
   const act = document.createElement('div');
@@ -368,7 +449,18 @@ function renderTile(ch) {
   const resumable = ['exited', 'pane_gone'].includes(ch.status);
   mk('↻ 恢复', c => act_resume(c), 'primary', '恢复会话并自动续跑（goal 弹窗自动确认）', resumable);
   mk('⌨ 终端', c => act_focus(c), '', '接管该题 pane（优先复用已打开的终端）', hasPane);
-  mk('⚑ flag', c => { flagTarget = c; $('fFlag').value = c.flag || ''; dlgFlag.showModal(); });
+  mk('⚑ flag', c => {
+    flagTarget = c;
+    $('fFlag').value = c.flag || '';
+    $('fFlagErr').textContent = '';
+    const boundCh = !!(c.contest && c.contest.question_id);
+    $('btnSubmitFlag').hidden = !boundCh;
+    $('fFlagHint').hidden = !boundCh;
+    dlgFlag.showModal();
+  });
+  if (bound && ch.contest.interactive) {
+    mk('🔄 重置', c => act_reset_env(c), '', '调用平台接口重置该题容器环境');
+  }
   mk('📎 附件', c => { uploadTarget = c; $('fUpload').click(); }, '', '上传本地文件到该题 attachments/（压缩包自动解压）');
   mk('✕ 删除', c => { delTarget = c; $('delInfo').textContent = c.name + '  (' + c.workdir + ')'; dlgDel.showModal(); }, 'danger');
   tile.appendChild(act);
@@ -377,6 +469,13 @@ function renderTile(ch) {
 
 async function act_resume(ch) { try { await api(`/challenges/${ch.id}/resume`, 'POST'); } catch (e) { alert(e.message); } refresh(); }
 async function act_focus(ch) { try { await api(`/challenges/${ch.id}/focus`, 'POST'); } catch (e) { alert(e.message); } }
+async function act_reset_env(ch) {
+  if (!confirm(`确认重置「${ch.name}」的容器环境？平台上的运行实例会被重建，正在进行的连接会断开。`)) return;
+  try {
+    const r = await api(`/contests/${ch.contest.adapter}/questions/${ch.contest.question_id}/reset`, 'POST');
+    alert((r.ok ? '✅ 重置成功' : '❌ 重置失败') + (r.message ? '：' + r.message : ''));
+  } catch (e) { alert('重置失败: ' + e.message); }
+}
 
 // ---------------- 新建题目 ----------------
 $('btnNew').onclick = async () => {
@@ -536,6 +635,181 @@ async function act_delete(files) {
   catch (e) { alert(e.message); }
   refresh();
 }
+
+// 平台题: 先提交平台判题, 判对才保存+solved; 判错留在对话框显示平台消息
+$('btnSubmitFlag').onclick = async () => {
+  if (!flagTarget) return;
+  try {
+    $('btnSubmitFlag').disabled = true;
+    const r = await api(`/challenges/${flagTarget.id}/submit_flag`, 'POST', { flag: $('fFlag').value });
+    if (r.ok) {
+      dlgFlag.close();
+      alert('✅ 平台判定正确' + (r.message ? '：' + r.message : ''));
+    } else {
+      $('fFlagErr').textContent = '❌ 平台判定错误：' + (r.message || '答案错误') + '（flag 未保存）';
+    }
+  } catch (e) { $('fFlagErr').textContent = e.message; }
+  finally { $('btnSubmitFlag').disabled = false; }
+  refresh();
+};
+
+// ---------------- 赛事平台 ----------------
+$('btnContest').onclick = async () => {
+  try {
+    if (!cfg) cfg = await api('/config');
+    const data = await api('/contests');
+    contests = data.contests;
+  } catch (e) { alert(e.message); return; }
+  const hsel = $('cHarness');
+  const prevHarness = hsel.value;
+  hsel.innerHTML = '';
+  for (const h of cfg.harnesses) {
+    const o = document.createElement('option');
+    o.value = o.textContent = h;
+    hsel.appendChild(o);
+  }
+  hsel.value = (prevHarness && cfg.harnesses.includes(prevHarness)) ? prevHarness
+    : (cfg.harnesses.includes('claude') ? 'claude' : cfg.default_harness);
+  const sel = $('cAdapter');
+  sel.innerHTML = '';
+  for (const c of contests) {
+    const o = document.createElement('option');
+    o.value = c.id;
+    o.textContent = c.name + (c.has_token ? '（已存 token）' : '');
+    sel.appendChild(o);
+  }
+  $('cErr').textContent = contests.length ? '' : 'contests/ 目录下还没有适配器 yaml';
+  if (contestId && contests.some(c => c.id === contestId)) sel.value = contestId;
+  syncContestUI();
+  dlgContest.showModal();
+};
+
+function curContest() { return contests.find(c => c.id === $('cAdapter').value) || null; }
+
+function syncContestUI() {
+  const c = curContest();
+  contestId = c ? c.id : null;
+  $('cNote').textContent = c ? (c.note ? c.note + '  ' : '') +
+    `[支持: ${['list', 'reset', 'submit'].filter(k => c.supports[k]).join('/')}]` : '';
+  $('cToken').placeholder = c && c.has_token ? '已保存 token（留空沿用；粘贴新 token 可更换）' : '赛事方发放的队伍 token';
+}
+$('cAdapter').onchange = syncContestUI;
+
+$('btnFetchQ').onclick = async () => {
+  const c = curContest();
+  if (!c) return;
+  $('cErr').textContent = '';
+  $('cList').innerHTML = '<div style="color:var(--dim);padding:12px">拉取中……</div>';
+  try {
+    $('btnFetchQ').disabled = true;
+    const t = $('cToken').value.trim();
+    const data = await api(`/contests/${c.id}/questions` + (t ? `?token=${encodeURIComponent(t)}` : ''));
+    contestQs = data.questions;
+    $('cToken').value = '';        // 已保存到服务端, 清空防误改
+    renderContestQs();
+    if (c.has_token === false) {   // 本次是新 token, 刷新下拉里「已存 token」标记
+      c.has_token = true;
+      for (const o of $('cAdapter').options)
+        if (o.value === c.id) o.textContent = c.name + '（已存 token）';
+      syncContestUI();
+    }
+  } catch (e) {
+    contestQs = [];
+    $('cList').innerHTML = '';
+    $('cErr').textContent = e.message;
+  } finally { $('btnFetchQ').disabled = false; }
+};
+
+function renderContestQs() {
+  const list = $('cList');
+  list.innerHTML = '';
+  if (!contestQs.length) {
+    list.innerHTML = '<div style="color:var(--dim);padding:12px">平台返回 0 道题</div>';
+    return;
+  }
+  for (const q of contestQs) {
+    const row = document.createElement('div');
+    row.className = 'q-row' + (q.local ? ' imported' : '');
+    const cb = document.createElement('input');
+    cb.type = 'checkbox';
+    cb.dataset.qid = q.question_id;
+    cb.disabled = !!q.local;
+    cb.checked = !q.local;
+    const main = document.createElement('div');
+    main.style.minWidth = '0';
+    const mapped = (q.category_raw || '').toLowerCase() !== q.category ? `→${q.category}` : '';
+    const subBits = [
+      (q.category_raw || q.category || '?') + mapped,
+      q.score != null ? q.score + ' 分' : '',
+      q.interactive ? '容器题' : '静态题',
+      q.file_url ? '有附件' : '',
+      q.target ? '🎯 ' + q.target : '',
+      q.local ? `已导入: ${q.local.name}` : '',
+    ].filter(Boolean);
+    main.innerHTML = `<div class="q-title"></div><div class="q-sub"></div>`;
+    main.querySelector('.q-title').textContent = q.title || q.question_id;
+    main.querySelector('.q-sub').textContent = subBits.join(' · ');
+    const tags = document.createElement('div');
+    tags.style.cssText = 'display:flex;gap:5px;flex-wrap:wrap;justify-content:flex-end';
+    if (q.is_solved) tags.innerHTML += '<span class="q-tag solved">平台已解</span>';
+    if (q.interactive) tags.innerHTML += '<span class="q-tag docker">docker</span>';
+    const hsel = document.createElement('select');
+    hsel.dataset.qid = q.question_id;
+    hsel.disabled = !!q.local;
+    hsel.style.cssText = 'width:auto;font-size:11px;padding:3px 5px';
+    hsel.title = '该题导入后使用的 harness';
+    for (const h of (cfg ? cfg.harnesses : [])) {
+      const o = document.createElement('option');
+      o.value = o.textContent = h;
+      hsel.appendChild(o);
+    }
+    // 导入默认 claude (没有 claude 则回退到全局默认)
+    hsel.value = cfg && cfg.harnesses.includes('claude') ? 'claude' : (cfg ? cfg.default_harness : '');
+    row.append(cb, main, hsel, tags);
+    list.appendChild(row);
+  }
+  $('cCheckAll').checked = false;
+}
+
+$('cCheckAll').onchange = () => {
+  for (const cb of $('cList').querySelectorAll('input[type=checkbox]:not(:disabled)'))
+    cb.checked = $('cCheckAll').checked;
+};
+
+// 「全部设为」: 一键改所有未导入题的 harness 下拉
+$('cHarness').onchange = () => {
+  for (const s of $('cList').querySelectorAll('select[data-qid]:not(:disabled)'))
+    s.value = $('cHarness').value;
+};
+
+$('btnImport').onclick = async () => {
+  const c = curContest();
+  if (!c) return;
+  const ids = [...$('cList').querySelectorAll('input[type=checkbox]:checked:not(:disabled)')].map(x => x.dataset.qid);
+  if (!ids.length) { $('cErr').textContent = '没有勾选可导入的题目'; return; }
+  const harnesses = {};
+  for (const qid of ids) {
+    const s = $('cList').querySelector(`select[data-qid="${qid}"]`);
+    if (s && s.value) harnesses[qid] = s.value;
+  }
+  $('cErr').textContent = '';
+  try {
+    $('btnImport').disabled = true;
+    const r = await api(`/contests/${c.id}/import`, 'POST', {
+      question_ids: ids,
+      auto_launch: $('cAutoLaunch').checked,
+      harnesses,
+    });
+    let msg = `导入 ${r.created.length} 题`;
+    if (r.skipped.length) msg += `，跳过已导入 ${r.skipped.length} 题`;
+    if (r.errors.length) msg += `\n失败 ${r.errors.length} 题:\n` + r.errors.join('\n');
+    alert(msg);
+    if (!r.errors.length) dlgContest.close();
+    else $('btnFetchQ').click();   // 有失败的保留对话框, 刷新列表标注
+  } catch (e) { $('cErr').textContent = e.message; }
+  finally { $('btnImport').disabled = false; }
+  refresh();
+};
 
 refresh();
 setInterval(refresh, 3000);
