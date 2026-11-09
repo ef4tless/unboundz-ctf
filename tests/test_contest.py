@@ -187,7 +187,9 @@ class SubmitFlagEndpointTests(unittest.TestCase):
         return ch
 
     def submit(self, ch, flag):
-        with patch.object(server, "_get", return_value=ch):
+        with patch.object(server, "_get", return_value=ch), \
+             patch.object(server.store, "get_competition_mode",
+                          return_value=store.MODE_API_AUTO):
             return server.submit_flag(ch.id, server.FlagIn(flag=flag))
 
     def test_platform_accept_marks_solved(self):

@@ -1,0 +1,88 @@
+#!/usr/bin/env python3
+"""ubz-ctf: 共享黑板 board.md 原子读写工具。
+
+用法:
+  ubz-board fact  "<已验证事实>（依据：...）"
+  ubz-board vuln  "<已验证漏洞点：位置/类型/成因>（复现：...）"
+  ubz-board dead  "<已否证路线> — 原因"
+  ubz-board lock  "<对靶机有全局副作用的操作>"
+  ubz-board flag  "<真实flag>（逐字见于哪条命令输出）"
+  ubz-board patch "<修补包路径>（修了哪些点）"
+  ubz-board inbox "<速记>"
+  ubz-board show
+"""
+
+from __future__ import annotations
+
+import os
+import sys
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parent.parent
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+from core import store  # noqa: E402
+
+
+def _find_board() -> Path:
+    # 启动/恢复时由 server 注入绝对路径，Skills 改变 cwd 后仍写同一块板。
+    configured = os.environ.get("UBZ_BOARD_FILE", "").strip()
+    if configured:
+        return Path(configured).expanduser().resolve()
+
+    cwd = Path.cwd()
+    candidates = []
+    workdir = os.environ.get("UBZ_WORKDIR", "").strip()
+    if workdir:
+        candidates.append(Path(workdir).expanduser() / "board.md")
+    candidates.extend((cwd / "board.md", cwd.parent / "board.md",
+                       cwd.parent.parent / "board.md"))
+    for candidate in candidates:
+        if candidate.exists() or candidate.is_symlink():
+            return candidate.resolve()
+    return candidates[0].resolve()
+
+
+def _infer_source() -> str:
+    env_h = os.environ.get("UBZ_HARNESS", "").strip()
+    if env_h:
+        return env_h
+    cwd = Path.cwd()
+    if cwd.parent.name == "runs":
+        return cwd.name
+    return ""
+
+
+def main() -> int:
+    if len(sys.argv) < 2 or sys.argv[1] in ("-h", "--help", "help"):
+        print(__doc__.strip())
+        return 0
+
+    cmd = sys.argv[1].strip().lower()
+    board_path = _find_board()
+
+    if cmd in ("show", "cat", "read"):
+        if not board_path.is_file():
+            print("（board.md 尚未创建）")
+            return 0
+        print(board_path.read_text(encoding="utf-8"), end="")
+        return 0
+
+    text = " ".join(sys.argv[2:]).strip()
+    if not text and not sys.stdin.isatty():
+        text = sys.stdin.read().strip()
+    if not text:
+        print("错误: 请提供要写入黑板的条目内容", file=sys.stderr)
+        return 1
+
+    added = store.append_board_entry(board_path, cmd, text, source=_infer_source())
+    if added:
+        print(f"[ubz-board] 已写入 {board_path.name} ({cmd})")
+    else:
+        print(f"[ubz-board] 条目已存在，跳过重复写入 ({cmd})")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

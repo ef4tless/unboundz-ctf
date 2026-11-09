@@ -1,0 +1,126 @@
+# 羊城杯决赛 · AI 自动赛道（AI Agent API）
+# 认证: X-Agent-AccessKey；serverHost 与 AccessKey 按赛事根目录分别保存。
+id: yangchengbei-ai
+name: 羊城杯决赛 · AI 自动赛道
+note: 需要 serverHost 和 Agent AccessKey；自动展开分类并逐题补详情，重置=回收后启动
+server_host:
+  required: true
+  label: 羊城杯 serverHost
+  placeholder: https://example.com（不要包含 /slab-match）
+
+apis:
+  list:
+    method: GET
+    url: "{server_host}/slab-match/api/v1/agent/ctf/exercise-list"
+    headers:
+      X-Agent-AccessKey: "{token}"
+    ok: 'code == "00000"'
+    data: data
+    children: corpus
+    parent_fields:
+      category: name
+    fields:
+      question_id: id
+      title: name
+      category: category
+      is_solved: hasSolved
+
+  detail:
+    method: GET
+    url: "{server_host}/slab-match/api/v1/agent/ctf/exercise?exerciseId={question_id}"
+    headers:
+      X-Agent-AccessKey: "{token}"
+    ok: 'code == "00000"'
+    data: data
+    fields:
+      question_id: id
+      title: name
+      description: description
+      score: score
+      difficulty: difficulty
+      is_solved: hasSolved
+      endpoints: endpoints
+      is_need_init: isNeedInit
+      is_need_check: isNeedCheck
+      can_refresh_endpoint: canRefreshEndpoint
+      endpoint_type: endpointType
+    target_strategy: endpoints
+    files_path: attachment
+
+  reset:
+    steps:
+      - method: POST
+        url: "{server_host}/slab-match/api/v1/agent/ctf/recover-exercise-env"
+        headers:
+          X-Agent-AccessKey: "{token}"
+        body:
+          exerciseId: "{question_id}"
+        ok: 'code == "00000"'
+      - method: POST
+        url: "{server_host}/slab-match/api/v1/agent/ctf/build-exercise-env"
+        headers:
+          X-Agent-AccessKey: "{token}"
+        body:
+          exerciseId: "{question_id}"
+        ok: 'code == "00000"'
+    # 启动是异步操作：轮询详情直到 isNeedInit/isNeedCheck=false 且 endpoints 可用
+    wait_ready:
+      timeout: 90
+      interval: 3
+
+  submit:
+    method: POST
+    url: "{server_host}/slab-match/api/v1/agent/answer-panel/answer"
+    headers:
+      X-Agent-AccessKey: "{token}"
+      Content-Type: application/json
+    # 平台只收 {} 内的内容：flag{x}/DASCTF{x} 都提交 x，无外壳则原样提交。
+    answer_inner_braces: true
+    body:
+      exerciseId: "{question_id}"
+      flag: "{answer}"
+    ok: 'code == "00000" and data.get("isCorrect") == True'
+
+queries:
+  match_info:
+    label: 赛事注意事项与规则
+    method: GET
+    url: "{server_host}/slab-match/api/v1/agent/match/notice/match-info"
+    headers:
+      X-Agent-AccessKey: "{token}"
+    ok: 'code == "00000"'
+    data: data
+
+  overview:
+    label: 得分与排名
+    method: GET
+    url: "{server_host}/slab-match/api/v1/agent/answer-panel/overview"
+    headers:
+      X-Agent-AccessKey: "{token}"
+    ok: 'code == "00000"'
+    data: data
+
+  notices:
+    label: 赛事公告
+    method: GET
+    url: "{server_host}/slab-match/api/v1/agent/match/notice/now-list"
+    headers:
+      X-Agent-AccessKey: "{token}"
+    ok: 'code == "00000"'
+    data: data
+    item_id: id
+    item_title: title
+    detail:
+      method: GET
+      url: "{server_host}/slab-match/api/v1/agent/match/notice/detail?id={item_id}"
+      headers:
+        X-Agent-AccessKey: "{token}"
+      ok: 'code == "00000"'
+      data: data
+
+category_map:
+  web: web
+  pwn: pwn
+  reverse: re
+  crypto: crypto
+  misc: misc

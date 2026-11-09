@@ -17,6 +17,7 @@
 from __future__ import annotations
 
 import json
+import time
 from pathlib import Path
 from typing import Any, Optional
 from urllib.parse import quote
@@ -69,6 +70,12 @@ def adapter_summary(a: dict) -> dict:
         "id": a["id"],
         "name": a.get("name") or a["id"],
         "note": a.get("note") or "",
+        "server_host": a.get("server_host") or {},
+        "queries": {name: {"label": (q or {}).get("label") or name,
+                           "item_id": (q or {}).get("item_id") or "id",
+                           "item_title": (q or {}).get("item_title") or "title",
+                           "has_detail": isinstance((q or {}).get("detail"), dict)}
+                    for name, q in (a.get("queries") or {}).items()},
         "supports": {k: isinstance(apis.get(k), dict) for k in ("list", "reset", "submit")},
     }
 
@@ -82,7 +89,11 @@ def _render(template: Any, ctx: dict[str, Any], encode: bool) -> Any:
         for k, v in ctx.items():
             if v is None:
                 v = ""
-            out = out.replace("{" + k + "}", quote(str(v), safe="") if encode else str(v))
+            if out == "{" + k + "}" and not encode:
+                return v   # JSON body 的完整占位符保留 int/bool 等原始类型
+            replacement = (str(v).rstrip("/") if k == "server_host" else
+                           quote(str(v), safe="") if encode else str(v))
+            out = out.replace("{" + k + "}", replacement)
         return out
     if isinstance(template, list):
         return [_render(x, ctx, encode) for x in template]
@@ -173,6 +184,46 @@ def _request(spec: dict, ctx: dict[str, Any]) -> Any:
         raise ContestError(f"平台返回非 JSON (HTTP {resp.status_code}): {resp.text[:200]}") from e
 
 
+def _endpoint_target(endpoints: Any) -> str:
+    """羊城杯 endpoints -> 单个可连接地址，优先遵循 isProxy。"""
+    if not isinstance(endpoints, list) or not endpoints:
+        return ""
+    ep = endpoints[0] if isinstance(endpoints[0], dict) else {}
+    proxied = _truthy(ep.get("isProxy"))
+    primary = ep.get("proxyIps") if proxied else ep.get("exposeIps")
+    fallback = ep.get("exposeIps") if proxied else ep.get("proxyIps")
+    hosts = primary if isinstance(primary, list) and primary else fallback
+    host = str(hosts[0]).strip() if isinstance(hosts, list) and hosts else ""
+    mappings = ep.get("portMappings") if isinstance(ep.get("portMappings"), list) else []
+    ports = ep.get("ports") if isinstance(ep.get("ports"), list) else []
+    port = ""
+    if proxied and mappings:
+        port = str(mappings[0].get("proxy") or "")
+    if not port and ports:
+        port = str(ports[0])
+    if not port and mappings:
+        port = str(mappings[0].get("port") or mappings[0].get("proxy") or "")
+    return f"{host}:{port}" if host and port else host
+
+
+def _normalize_files(item: dict, spec: dict, q: dict) -> None:
+    files = dig(item, spec.get("files_path") or "") if spec.get("files_path") else q.get("files")
+    # 羊城杯实际返回 attachment={url,...}；兼容 {files:[...]} 与直接数组。
+    if isinstance(files, dict):
+        if isinstance(files.get("files"), list):
+            files = files["files"]
+        elif files.get("url"):
+            files = [files]
+    if not isinstance(files, list):
+        return
+    urls = [str(f.get("url")).strip() for f in files
+            if isinstance(f, dict) and f.get("url")]
+    if urls:
+        q["file_urls"] = urls
+        if not q.get("file_url"):
+            q["file_url"] = urls[0]
+
+
 # ---------------------------------------------------------------- 题目归一化
 
 def normalize_question(item: dict, spec: dict, adapter: dict) -> dict:
@@ -190,11 +241,14 @@ def normalize_question(item: dict, spec: dict, adapter: dict) -> dict:
     q["is_solved"] = _truthy(q.get("is_solved"))
 
     target = ""
-    for path in spec.get("target_fields") or []:
-        v = dig(item, path)
-        if v:
-            target = str(v).strip()
-            break
+    if spec.get("target_strategy") == "endpoints":
+        target = _endpoint_target(q.get("endpoints"))
+    if not target:
+        for path in spec.get("target_fields") or []:
+            v = dig(item, path)
+            if v:
+                target = str(v).strip()
+                break
     if not target:  # 兜底: ip + port 拼接
         conn = q.get("connection")
         if isinstance(conn, dict):
@@ -204,37 +258,166 @@ def normalize_question(item: dict, spec: dict, adapter: dict) -> dict:
             elif ip:
                 target = str(ip)
     q["target"] = target
+    _normalize_files(item, spec, q)
+    pending = _truthy(q.get("is_need_init")) or _truthy(q.get("is_need_check"))
+    q["interactive"] = q["interactive"] or pending or bool(q.get("endpoints"))
+    q["environment_pending"] = pending or (q["interactive"] and not target)
     return q
 
 
-def fetch_questions(adapter: dict, token: str) -> list[dict]:
-    """调用 list 接口并归一化题目列表。"""
+def fetch_question_detail(adapter: dict, summary: dict, token: str,
+                          server_host: str = "") -> dict:
+    """为一题补充详情；列表查询无需先成功请求所有题目的详情。"""
+    detail = (adapter.get("apis") or {}).get("detail")
+    if not isinstance(detail, dict):
+        return summary
+    resp = _request(detail, {
+        "token": token, "server_host": server_host,
+        "question_id": summary["question_id"]})
+    if not check_ok(detail.get("ok", ""), resp):
+        raise ContestError(
+            f"题目 {summary['question_id']} 详情返回错误: {_msg(resp)}")
+    raw = dig(resp, detail.get("data") or "data")
+    if not isinstance(raw, dict):
+        raise ContestError(f"题目 {summary['question_id']} 详情 data 不是对象")
+    full = normalize_question(raw, detail, adapter)
+    if not full.get("category_raw") and summary.get("category_raw"):
+        full["category_raw"] = summary["category_raw"]
+        full["category"] = summary["category"]
+    return {**summary, **full}
+
+
+def fetch_questions(adapter: dict, token: str,
+                    server_host: str = "", include_details: bool = True) -> list[dict]:
+    """拉取列表；可选按 parent.children 展开，并逐题补 detail。"""
     spec = (adapter.get("apis") or {}).get("list")
     if not isinstance(spec, dict):
         raise ContestError(f"适配器 {adapter['id']} 未定义 list 接口")
-    resp = _request(spec, {"token": token})
+    ctx = {"token": token, "server_host": server_host}
+    resp = _request(spec, ctx)
     if not check_ok(spec.get("ok", ""), resp):
         raise ContestError(f"平台返回错误: {_msg(resp)}")
     data = dig(resp, spec.get("data") or "data")
     if not isinstance(data, list):
         raise ContestError(f"响应里 '{spec.get('data')}' 不是数组, 检查适配器 data 路径")
-    return [normalize_question(x, spec, adapter) for x in data if isinstance(x, dict)]
+
+    items: list[dict] = []
+    children = spec.get("children")
+    parent_fields = spec.get("parent_fields") or {}
+    for parent in data:
+        if not isinstance(parent, dict):
+            continue
+        if children:
+            nested = dig(parent, children)
+            if not isinstance(nested, list):
+                continue
+            for child in nested:
+                if not isinstance(child, dict):
+                    continue
+                item = dict(child)
+                for name, path in parent_fields.items():
+                    if not item.get(name):
+                        item[name] = dig(parent, path)
+                items.append(item)
+        else:
+            items.append(parent)
+    questions = [normalize_question(item, spec, adapter) for item in items]
+
+    detail = (adapter.get("apis") or {}).get("detail")
+    if not isinstance(detail, dict) or not include_details:
+        return questions
+    return [fetch_question_detail(adapter, summary, token, server_host)
+            for summary in questions]
 
 
-def reset_env(adapter: dict, token: str, question_id: str) -> dict:
+def query(adapter: dict, name: str, ctx: dict[str, Any]) -> Any:
+    """适配器声明的只读扩展查询（概览/规则/公告等），不经过比赛专属代码。"""
+    spec = (adapter.get("queries") or {}).get(name)
+    if not isinstance(spec, dict):
+        raise ContestError(f"适配器 {adapter['id']} 未声明查询 {name}")
+    resp = _request(spec, ctx)
+    if not check_ok(spec.get("ok", ""), resp):
+        raise ContestError(f"平台返回错误: {_msg(resp)}")
+    return dig(resp, spec.get("data") or "data")
+
+
+def query_detail(adapter: dict, name: str, ctx: dict[str, Any]) -> Any:
+    base = (adapter.get("queries") or {}).get(name) or {}
+    spec = base.get("detail")
+    if not isinstance(spec, dict):
+        raise ContestError(f"适配器 {adapter['id']} 的查询 {name} 不支持详情")
+    resp = _request(spec, ctx)
+    if not check_ok(spec.get("ok", ""), resp):
+        raise ContestError(f"平台返回错误: {_msg(resp)}")
+    return dig(resp, spec.get("data") or "data")
+
+
+def reset_env(adapter: dict, token: str, question_id: str,
+              server_host: str = "") -> dict:
     spec = (adapter.get("apis") or {}).get("reset")
     if not isinstance(spec, dict):
         raise ContestError(f"适配器 {adapter['id']} 未定义 reset 接口")
-    resp = _request(spec, {"token": token, "question_id": question_id})
+    qid = int(question_id) if str(question_id).isdigit() else question_id
+    ctx = {"token": token, "question_id": qid,
+           "server_host": server_host}
+    steps = spec.get("steps")
+    if isinstance(steps, list):
+        raw = []
+        for step in steps:
+            resp = _request(step, ctx)
+            if not check_ok(step.get("ok", ""), resp):
+                return {"ok": False, "message": _msg(resp), "raw": resp}
+            raw.append(resp)
+        result = {"ok": True, "message": _msg(raw[-1] if raw else {}), "raw": raw}
+        wait = spec.get("wait_ready") or {}
+        detail = (adapter.get("apis") or {}).get("detail")
+        if isinstance(wait, dict) and isinstance(detail, dict):
+            deadline = time.monotonic() + float(wait.get("timeout", 90))
+            interval = float(wait.get("interval", 3))
+            while True:
+                detail_resp = _request(detail, ctx)
+                if not check_ok(detail.get("ok", ""), detail_resp):
+                    return {"ok": False, "message": _msg(detail_resp),
+                            "raw": detail_resp, "ready": False}
+                item = dig(detail_resp, detail.get("data") or "data")
+                if not isinstance(item, dict):
+                    return {"ok": False, "message": "环境详情 data 不是对象",
+                            "raw": detail_resp, "ready": False}
+                question = normalize_question(item, detail, adapter)
+                result["question"] = question
+                result["target"] = question["target"]
+                if not question["environment_pending"] and question["target"]:
+                    result["ready"] = True
+                    return result
+                if time.monotonic() >= deadline:
+                    result["ready"] = False
+                    result["message"] = "环境已启动，但等待 endpoints 就绪超时"
+                    return result
+                time.sleep(interval)
+        return result
+    resp = _request(spec, ctx)
     ok = check_ok(spec.get("ok", ""), resp)
     return {"ok": ok, "message": _msg(resp), "raw": resp}
 
 
-def submit_answer(adapter: dict, token: str, question_id: str, answer: str) -> dict:
+def submit_answer(adapter: dict, token: str, question_id: str, answer: str,
+                  server_host: str = "") -> dict:
     spec = (adapter.get("apis") or {}).get("submit")
     if not isinstance(spec, dict):
         raise ContestError(f"适配器 {adapter['id']} 未定义 submit 接口")
-    resp = _request(spec, {"token": token, "question_id": question_id, "answer": answer})
+    qid = int(question_id) if str(question_id).isdigit() else question_id
+    answer = answer.strip()
+    if spec.get("answer_inner_braces"):
+        # 羊城杯只收 {} 内内容；无外壳时保持原值，本地仍保存完整 flag。
+        start, end = answer.find("{"), answer.rfind("}")
+        if 0 <= start < end:
+            answer = answer[start + 1:end]
+        elif start >= 0:
+            answer = answer[start + 1:]  # 半截外壳：flag{abc
+        elif end == len(answer) - 1:
+            answer = answer[:-1]         # 半截外壳：abc}
+    resp = _request(spec, {"token": token, "question_id": qid,
+                           "answer": answer, "server_host": server_host})
     ok = check_ok(spec.get("ok", ""), resp)
     return {"ok": ok, "message": _msg(resp), "raw": resp}
 
@@ -265,10 +448,20 @@ def import_payload(adapter: dict, q: dict) -> dict:
             bits.append(f"{label} " + ",".join(str(v) for v in vals))
     if q.get("interactive"):
         bits.append("容器题(平台可重置环境)")
+    if q.get("difficulty"):
+        bits.append(f"难度 {q['difficulty']}")
+    if q.get("environment_pending"):
+        bits.append("环境待启动或准备中（启动后可重新拉取详情）")
     if bits:
         parts.append("平台信息: " + " · ".join(bits))
-    ext = q.get("extensions")
-    if isinstance(ext, dict) and ext:
+    ext = dict(q.get("extensions") or {}) if isinstance(q.get("extensions"), dict) else {}
+    if q.get("endpoints"):
+        ext["endpoints"] = q["endpoints"]
+    if q.get("is_need_init") is not None:
+        ext["isNeedInit"] = q["is_need_init"]
+    if q.get("is_need_check") is not None:
+        ext["isNeedCheck"] = q["is_need_check"]
+    if ext:
         parts.append("扩展信息: " + json.dumps(ext, ensure_ascii=False))
     if q["category_raw"] and q["category_raw"].lower() != q["category"]:
         parts.append(f"(平台原始分类: {q['category_raw']})")
@@ -278,7 +471,8 @@ def import_payload(adapter: dict, q: dict) -> dict:
         "category": map_category(q["category"]),
         "info": "\n\n".join(parts),
         "target": q.get("target") or "",
-        "attachment_urls": [q["file_url"]] if q.get("file_url") else [],
+        "attachment_urls": (q.get("file_urls") or
+                            ([q["file_url"]] if q.get("file_url") else [])),
         "contest": {
             "adapter": adapter["id"],
             "adapter_name": adapter.get("name") or adapter["id"],
