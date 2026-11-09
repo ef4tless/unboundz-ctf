@@ -3,290 +3,1072 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>ubz-ctf</title>
+<title>ubz-ctf · Command Deck</title>
 <style>
+  /* ==========================================================================
+     MUTEKI-INSPIRED COMMAND DECK DESIGN SYSTEM
+     High-Contrast Geek-White (Light) & Command Deck Slate (Dark)
+     with OKLCH Scheme Accents & Per-Engine Identity Hues
+     ========================================================================== */
   :root {
     color-scheme: dark;
-    --bg: #090c12; --panel: #121721; --panel-raised: #171d28; --panel2: #1c2330;
-    --border: #293242; --border-soft: #202838; --fg: #e6edf7; --dim: #8d99aa;
-    --accent: #58a6ff; --green: #3fd67a; --orange: #e5a83b; --red: #ff6863;
-    --gray: #7f8a9a; --purple: #bd8cff; --tile-height: 326px;
-  }
-  * { box-sizing: border-box; }
-  html { min-width: 320px; }
-  body {
-    min-height: 100vh; margin: 0; color: var(--fg);
-    font-family: Inter, ui-sans-serif, system-ui, "PingFang SC", "Microsoft YaHei", sans-serif;
-    background:
-      radial-gradient(circle at 12% -10%, rgba(88, 166, 255, .09), transparent 30rem),
-      radial-gradient(circle at 88% 0%, rgba(189, 140, 255, .06), transparent 26rem),
-      var(--bg);
-  }
-  header {
-    min-height: 58px; display: flex; align-items: center; gap: 12px; padding: 10px 22px;
-    border-bottom: 1px solid rgba(66, 78, 98, .55); position: sticky; top: 0;
-    background: rgba(9, 12, 18, .96); z-index: 5;
-    box-shadow: 0 8px 28px rgba(0, 0, 0, .2);
-  }
-  header h1 { font-size: 18px; margin: 0; letter-spacing: .6px; white-space: nowrap; }
-  header h1::first-letter { color: var(--accent); }
-  .chip {
-    max-width: min(62vw, 720px); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-    background: rgba(28, 35, 48, .8); border: 1px solid var(--border); border-radius: 8px;
-    padding: 6px 10px; font-size: 12px; cursor: pointer; color: var(--dim);
-  }
-  .chip:hover { border-color: var(--accent); color: var(--fg); background: var(--panel2); }
-  .spacer { flex: 1; }
-  button {
-    min-height: 28px; background: var(--panel2); color: var(--fg); border: 1px solid var(--border);
-    border-radius: 7px; padding: 4px 9px; font-size: 11px; font-weight: 550; cursor: pointer;
-  }
-  button:hover:not(:disabled) { border-color: #4b6280; background: #232c3b; }
-  button:focus-visible, .chip:focus-visible, .target:focus-visible, .flag:focus-visible, pre.output:focus-visible {
-    outline: 2px solid var(--accent); outline-offset: 2px;
-  }
-  button.primary { background: #1768bd; border-color: #3385da; color: #fff; }
-  button.primary:hover:not(:disabled) { background: #1d73cb; border-color: #67adff; }
-  button.danger:hover:not(:disabled) { border-color: var(--red); color: #ff8c88; background: rgba(255, 104, 99, .08); }
-  button:disabled { opacity: .35; cursor: default; }
-  #elsewhere { font-size: 12px; color: var(--orange); white-space: nowrap; }
+    --bg: #0f1217;
+    --rail: #12161c;
+    --bg2: #141921;
+    --panel: #181d25;
+    --panel-raised: #1c222c;
+    --panel2: #141820;
+    --panel3: #222934;
+    --term-bg: #0b0e13;
+    --term-fg: #b8c4d4;
+    --term-border: #1f2632;
+    --line: #262e3b;
+    --line2: #323c4d;
+    --border: #262e3b;
+    --border-soft: #1f2632;
+    --border2: #323c4d;
+    --text: #dce3ec;
+    --fg: #dce3ec;
+    --bright: #f2f6fb;
+    --muted: #8b96a5;
+    --dim: #667182;
+    --gray: #768294;
 
-  /* 每个题目卡片使用同一固定高度；内部输出区独立滚动。 */
-  #board { max-width: 1900px; margin: 0 auto; padding: 20px 22px 30px; }
+    --blue: #58a6ff;
+    --accent: #58a6ff;
+    --on-accent: #090d12;
+    --green: #3fd67a;
+    --amber: #e5a83b;
+    --orange: #e5a83b;
+    --red: #ff6863;
+    --purple: #bd8cff;
+    --violet: #bd8cff;
+    --cyan: #4cc9f0;
+    --pink: #f472b6;
+    --gold: #eab308;
+
+    --shadow-hairline: 0 0 0 1px var(--line);
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, .32);
+    --shadow-md: 0 8px 22px -8px rgba(0, 0, 0, .55), 0 2px 4px -2px rgba(0, 0, 0, .32);
+    --shadow-pop: 0 0 0 1px var(--line2), 0 24px 56px -14px rgba(0, 0, 0, .75), 0 6px 16px -6px rgba(0, 0, 0, .45);
+    --ink-wash: rgba(255, 255, 255, .035);
+    --header-bg: rgba(15, 18, 23, .88);
+  }
+
+  :root {
+    --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    --font-mono: ui-monospace, "SF Mono", SFMono-Regular, "JetBrains Mono", Menlo, Consolas, "Liberation Mono", monospace;
+    --fs-label: 10px;
+    --fs-caption: 11px;
+    --fs-meta: 10px;
+    --fs-body: 13px;
+    --fs-h: 15px;
+    --ls-label: .07em;
+    --r-chip: 5px;
+    --r-input: 8px;
+    --r-card: 11px;
+    --r-pill: 999px;
+    --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+    --tile-height: 360px;
+    --focus-ring: color-mix(in srgb, var(--accent) 55%, var(--line2));
+
+    /* Engine identity tokens (Muteki --eng-*) */
+    --eng-claude: #d97757;
+    --eng-codex: #10a37f;
+    --eng-cursor: #8b5cf6;
+    --eng-gemini: #3b82f6;
+    --eng-deepseek: #6366f1;
+    --eng-dsh: #ec4899;
+    --eng-kimi: #0ea5e9;
+    --eng-opencode: #f59e0b;
+    --eng-pi: #eab308;
+    --eng-zcode: #60a5fa;
+    --eng-qwen: #a855f7;
+    --eng-default: var(--accent);
+  }
+
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  html { min-width: 320px; letter-spacing: -.006em; }
+  body {
+    min-height: 100vh; margin: 0; color: var(--text);
+    font-family: var(--font-sans); font-size: var(--fs-body); line-height: 1.5;
+    background: var(--bg);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  code, pre, kbd, .mono { font-family: var(--font-mono); }
+
+  /* ── Animations ─────────────────────────────────────────────────────────── */
+  @keyframes railspin { to { transform: rotate(360deg); } }
+  @keyframes fade-up { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes pop-in { from { opacity: 0; transform: scale(.96); } to { opacity: 1; transform: scale(1); } }
+  @keyframes pulse-dot { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: .45; transform: scale(.88); } }
+
+  /* ── Top Navigation Bar (Muteki convo-top / workspace-nav style) ────────── */
+  header {
+    min-height: 54px; display: flex; align-items: center; gap: 10px; padding: 8px 20px;
+    border-bottom: 1px dashed var(--line2); position: sticky; top: 0;
+    background: var(--bg);
+    z-index: 30;
+  }
+  .brand-wrap { display: inline-flex; align-items: center; gap: 9px; margin-right: 4px; user-select: none; }
+  .brand-mark {
+    width: 28px; height: 28px; border-radius: 7px; display: grid; place-items: center;
+    background: color-mix(in srgb, var(--accent) 14%, var(--panel));
+    border: 1px solid color-mix(in srgb, var(--accent) 38%, var(--line));
+    color: var(--accent); font-weight: 800; font-size: 14px;
+    box-shadow: inset 0 1px 0 color-mix(in srgb, var(--bright) 8%, transparent);
+  }
+  header h1 {
+    font-size: 14.5px; font-weight: 750; margin: 0; color: var(--bright);
+    letter-spacing: -.01em; white-space: nowrap; display: flex; align-items: baseline; gap: 6px;
+  }
+  header h1 em {
+    font-style: normal; font-size: 10px; font-weight: 650; font-family: var(--font-mono);
+    color: var(--muted); letter-spacing: .06em; text-transform: uppercase;
+    padding: 1px 5px; border-radius: 4px; background: var(--panel2); border: 1px solid var(--line);
+  }
+
+  .chip {
+    max-width: min(46vw, 540px); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    background: var(--panel); border: 1px solid var(--line2); border-radius: var(--r-input);
+    padding: 5px 10px; font-size: 11.5px; font-family: var(--font-mono); cursor: pointer;
+    color: var(--text); box-shadow: var(--shadow-sm);
+    transition: border-color .14s var(--ease-out), background .14s var(--ease-out);
+  }
+  .chip:hover { border-color: var(--accent); color: var(--bright); background: var(--panel3); }
+  .chip.unset {
+    color: var(--amber);
+    border-color: color-mix(in srgb, var(--amber) 45%, var(--line2));
+    background: color-mix(in srgb, var(--amber) 8%, var(--panel));
+  }
+  .spacer { flex: 1; }
+
+  #elsewhere {
+    font-size: 11px; font-weight: 600; color: var(--amber); white-space: nowrap;
+    padding: 3px 8px; border-radius: var(--r-pill);
+    background: color-mix(in srgb, var(--amber) 10%, transparent);
+    border: 1px solid color-mix(in srgb, var(--amber) 32%, var(--line));
+  }
+  #elsewhere:empty { display: none; }
+
+  /* ── Controls & Buttons ─────────────────────────────────────────────────── */
+  button {
+    min-height: 30px; background: var(--panel); color: var(--text);
+    border: 1px solid var(--line2); border-radius: var(--r-input);
+    padding: 4px 10px; font-family: inherit; font-size: 11.5px; font-weight: 600;
+    cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 5px;
+    box-shadow: var(--shadow-sm);
+    transition: border-color .12s var(--ease-out), background .12s var(--ease-out), color .12s var(--ease-out), transform .08s var(--ease-out);
+  }
+  button:hover:not(:disabled) {
+    color: var(--bright);
+    border-color: color-mix(in srgb, var(--accent) 45%, var(--line2));
+    background: var(--panel3);
+  }
+  button:active:not(:disabled) { transform: scale(.985); }
+  button:focus-visible, .chip:focus-visible, .target:focus-visible, .flag:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible {
+    outline: 2px solid var(--focus-ring); outline-offset: 2px;
+  }
+  button.primary {
+    background: var(--accent); border-color: color-mix(in srgb, var(--accent) 80%, #000);
+    color: var(--on-accent); font-weight: 650; box-shadow: none;
+  }
+  button.primary:hover:not(:disabled) { filter: brightness(1.08); background: var(--accent); color: var(--on-accent); }
+  button.success {
+    color: var(--green);
+    border-color: color-mix(in srgb, var(--green) 42%, var(--line2));
+    background: color-mix(in srgb, var(--green) 9%, var(--panel));
+  }
+  button.success:hover:not(:disabled) {
+    border-color: var(--green);
+    background: color-mix(in srgb, var(--green) 16%, var(--panel));
+  }
+  button.warn {
+    color: var(--amber);
+    border-color: color-mix(in srgb, var(--amber) 42%, var(--line2));
+    background: color-mix(in srgb, var(--amber) 9%, var(--panel));
+  }
+  button.danger {
+    color: var(--red);
+    border-color: color-mix(in srgb, var(--red) 35%, var(--line2));
+    background: color-mix(in srgb, var(--red) 6%, var(--panel));
+  }
+  button.danger:hover:not(:disabled) {
+    border-color: var(--red); color: var(--red);
+    background: color-mix(in srgb, var(--red) 14%, var(--panel));
+  }
+  button.ghost {
+    background: transparent; border-color: transparent; box-shadow: none; color: var(--muted);
+  }
+  button.ghost:hover:not(:disabled) {
+    background: var(--panel3); border-color: transparent; color: var(--bright);
+  }
+  button:disabled { opacity: .38; cursor: not-allowed; transform: none; }
+
+  /* 刷新控制：频率直接影响高并发时的后台压力 */
+  .refresh-controls {
+    display: inline-flex; align-items: center; gap: 3px; padding: 2px;
+    border: 1px solid var(--line); border-radius: var(--r-input); background: var(--panel2);
+  }
+  .refresh-btn {
+    min-height: 24px; height: 24px; padding: 0 7px; border: 0; border-radius: 5px;
+    background: transparent; box-shadow: none; font-size: 11px; color: var(--muted);
+  }
+  .refresh-btn:hover:not(:disabled) { background: var(--panel); color: var(--bright); }
+
+  #btnContest[hidden] { display: none !important; }
+
+  /* ── Command Deck Subheader: Quiet Meta + Filter Toolbar ────────────────── */
+  .deck-subhead {
+    max-width: 1920px; margin: 14px auto 0; padding: 0 20px;
+    display: flex; flex-direction: column; gap: 10px;
+  }
+  .quiet-meta {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(125px, 1fr));
+    border: 1px solid var(--line); border-radius: 10px;
+    background: var(--panel); box-shadow: var(--shadow-sm); overflow: hidden;
+  }
+  .qm {
+    min-height: 52px; padding: 8px 14px; display: flex; flex-direction: column;
+    justify-content: center; gap: 2px; border-right: 1px solid var(--line);
+    cursor: pointer; transition: background .12s var(--ease-out); user-select: none;
+  }
+  .qm:last-child { border-right: 0; }
+  .qm:hover { background: var(--panel2); }
+  .qm.active { background: color-mix(in srgb, var(--accent) 8%, var(--panel)); box-shadow: inset 0 -2px 0 var(--accent); }
+  .qm .qk {
+    color: var(--dim); font-size: 9.5px; font-weight: 700;
+    letter-spacing: var(--ls-label); text-transform: uppercase;
+    display: flex; align-items: center; gap: 5px;
+  }
+  .qm .qv {
+    font-family: var(--font-mono); font-size: 15px; font-weight: 700;
+    color: var(--bright); font-variant-numeric: tabular-nums;
+    display: flex; align-items: baseline; gap: 6px;
+  }
+  .qm .qv small { font-size: 10.5px; font-weight: 500; color: var(--muted); }
+
+  /* Filter & Search Bar (Muteki collab-toolbar style) */
+  .deck-toolbar {
+    display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+    padding: 7px 10px; border: 1px solid var(--line); border-radius: 10px;
+    background: color-mix(in srgb, var(--panel) 94%, transparent);
+    box-shadow: var(--shadow-sm);
+  }
+  .toolbar-search {
+    flex: 1 1 220px; min-width: 180px; max-width: 340px; height: 32px;
+    display: flex; align-items: center; gap: 7px; padding: 0 8px 0 10px;
+    border: 1px solid var(--line2); border-radius: 8px; background: var(--panel2);
+    color: var(--muted); transition: border-color .12s var(--ease-out);
+  }
+  .toolbar-search:focus-within { border-color: var(--accent); color: var(--text); background: var(--panel); }
+  .toolbar-search input {
+    width: 100%; min-width: 0; border: 0; outline: 0; background: transparent;
+    color: var(--bright); font: inherit; font-size: 12px; padding: 0;
+  }
+  .toolbar-search input::placeholder { color: var(--dim); }
+  .toolbar-search kbd {
+    font-size: 10px; color: var(--dim); border: 1px solid var(--line2);
+    border-radius: 4px; padding: 1px 4px; background: var(--panel);
+  }
+  .toolbar-search .clear-btn {
+    min-height: 20px; width: 20px; height: 20px; padding: 0; border: 0;
+    background: transparent; box-shadow: none; color: var(--dim); border-radius: 4px;
+  }
+  .toolbar-search .clear-btn:hover { color: var(--bright); background: var(--panel3); }
+
+  .seg-group {
+    display: inline-flex; align-items: center; gap: 2px; padding: 3px;
+    border: 1px solid var(--line); border-radius: 8px; background: var(--panel2);
+    overflow-x: auto; max-width: 100%; scrollbar-width: none;
+  }
+  .seg-group::-webkit-scrollbar { display: none; }
+  .seg-btn {
+    min-height: 24px; height: 24px; padding: 0 9px; border: 0; border-radius: 5px;
+    background: transparent; box-shadow: none; color: var(--muted);
+    font-size: 11px; font-weight: 600; white-space: nowrap;
+  }
+  .seg-btn:hover:not(:disabled) { color: var(--text); background: color-mix(in srgb, var(--bright) 4%, transparent); }
+  .seg-btn.active {
+    color: var(--bright);
+    background: color-mix(in srgb, var(--accent) 12%, var(--panel));
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 42%, var(--line));
+  }
+  .seg-btn .cnt-pill {
+    font-family: var(--font-mono); font-size: 9.5px; color: var(--dim);
+    margin-left: 3px; font-variant-numeric: tabular-nums;
+  }
+  .seg-btn.active .cnt-pill { color: var(--accent); }
+
+  /* ── Main Challenge Board ───────────────────────────────────────────────── */
+  #board { max-width: 1920px; margin: 0 auto; padding: 14px 20px 36px; }
   .cat-sec { margin-bottom: 24px; --cat-color: var(--gray); }
   .cat-head {
-    color: var(--cat-color); font-weight: 750; font-size: 13px; letter-spacing: 2.2px;
-    padding: 0 2px 10px; display: flex; align-items: center; gap: 10px;
+    color: var(--bright); font-weight: 750; font-size: 11.5px; letter-spacing: var(--ls-label);
+    text-transform: uppercase; padding: 0 2px 9px; display: flex; align-items: center; gap: 9px;
   }
-  .cat-head::after { content: ""; height: 1px; flex: 1; background: linear-gradient(90deg, var(--border), transparent); }
+  .cat-dot {
+    width: 8px; height: 8px; border-radius: 2px; background: var(--cat-color);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--cat-color) 18%, transparent);
+  }
+  .cat-head::after {
+    content: ""; height: 1px; flex: 1;
+    background: linear-gradient(90deg, var(--line2), transparent 85%);
+  }
   .cat-head .cnt {
-    order: 2; flex: none; font-size: 11px; font-weight: 500; letter-spacing: 0; color: var(--dim);
-    background: rgba(28, 35, 48, .65); border: 1px solid var(--border-soft);
-    border-radius: 999px; padding: 3px 8px;
+    order: 2; flex: none; font-family: var(--font-mono); font-size: 10.5px; font-weight: 600;
+    letter-spacing: 0; text-transform: none; color: var(--muted);
+    background: var(--panel); border: 1px solid var(--line);
+    border-radius: var(--r-pill); padding: 2px 9px; font-variant-numeric: tabular-nums;
   }
   .tiles {
-    display: grid; grid-template-columns: repeat(auto-fill, minmax(420px, 1fr));
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(430px, 1fr));
     grid-auto-rows: var(--tile-height); gap: 12px; align-items: stretch;
   }
 
+  /* ── Challenge Tile (Muteki wlane / status-hero / artifact-row fusion) ── */
   .tile {
     height: var(--tile-height); min-width: 0; overflow: hidden; position: relative;
-    background: linear-gradient(145deg, rgba(23, 29, 40, .96), rgba(16, 21, 30, .98));
-    border: 1px solid var(--border); border-left: 3px solid var(--gray); border-radius: 11px;
-    padding: 11px 12px 10px; display: flex; flex-direction: column; gap: 7px;
-    box-shadow: 0 10px 24px rgba(0, 0, 0, .13);
+    contain: content;
+    content-visibility: auto;
+    contain-intrinsic-block-size: var(--tile-height);
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-top: 2px solid var(--line2);
+    border-radius: var(--r-card);
+    padding: 11px 12px 10px; display: flex; flex-direction: column; gap: 6px;
+    box-shadow: var(--shadow-sm);
+    transition: border-color .12s var(--ease-out);
   }
-  .tile:hover { border-top-color: #354258; border-right-color: #354258; border-bottom-color: #354258; }
-  .tile.solved { border-left-color: var(--green); }
-  .tile.need_help { border-left-color: var(--orange); }
-  .tile.exited, .tile.failed, .tile.pane_gone { border-left-color: var(--red); }
-  .tile.running { border-left-color: var(--accent); }
-  .t-head { min-height: 23px; display: flex; align-items: center; gap: 7px; min-width: 0; }
-  .t-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 700; font-size: 13px; letter-spacing: .1px; }
-  .badge { flex: none; font-size: 9px; line-height: 16px; padding: 0 6px; border-radius: 999px; background: var(--panel2); border: 1px solid var(--border); color: #aeb9c9; text-transform: uppercase; }
-  .status { flex: none; margin-left: auto; font-size: 10px; font-weight: 650; line-height: 18px; padding: 0 7px; border-radius: 999px; }
-  .status.running { color: #79bbff; border: 1px solid #397fbd; background: rgba(88, 166, 255, .09); }
-  .status.solved { color: #69e49b; border: 1px solid #27894f; background: rgba(63, 214, 122, .09); }
-  .status.need_help { color: #f3bd59; border: 1px solid #9a6b1d; background: rgba(229, 168, 59, .09); }
-  .status.exited, .status.failed, .status.pane_gone { color: #ff8985; border: 1px solid #9b413e; background: rgba(255, 104, 99, .08); }
-  .status.created, .status.ready, .status.downloading, .status.launching, .status.stopped, .status.archived { color: #aeb7c4; border: 1px solid #536072; background: rgba(127, 138, 154, .08); }
+  .tile:hover {
+    border-color: var(--line2);
+  }
+  .tile.solved { border-top-color: var(--green); }
+  .tile.need_help {
+    border-top-color: var(--amber);
+    background: linear-gradient(180deg, color-mix(in srgb, var(--amber) 5%, var(--panel)) 0%, var(--panel) 48px);
+  }
+  .tile.exited, .tile.failed, .tile.pane_gone { border-top-color: var(--red); }
+  .tile.running, .tile.launching { border-top-color: var(--accent); }
+
+  /* Tile Header */
+  .t-head { min-height: 24px; display: flex; align-items: center; gap: 7px; min-width: 0; }
+  .t-glyph {
+    width: 16px; height: 16px; flex: none; display: inline-flex;
+    align-items: center; justify-content: center; font-size: 11px; color: var(--dim);
+  }
+  .t-glyph .spinner {
+    width: 11px; height: 11px; border-radius: 50%;
+    border: 2px solid color-mix(in srgb, var(--accent) 28%, var(--line2));
+    border-top-color: var(--accent); animation: railspin .75s linear infinite;
+  }
+  .t-glyph.solved { color: var(--green); font-weight: 800; }
+  .t-glyph.need_help { color: var(--amber); font-weight: 800; }
+  .t-glyph.bad { color: var(--red); font-weight: 800; }
+
+  .t-name {
+    min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    font-weight: 750; font-size: 13.5px; color: var(--bright);
+  }
+
+  .badge {
+    flex: none; font-family: var(--font-mono); font-size: 9.5px; font-weight: 700;
+    line-height: 16px; padding: 0 6px; border-radius: var(--r-chip);
+    background: var(--panel2); border: 1px solid var(--line2); color: var(--muted);
+  }
+  .badge.engine {
+    --wc: var(--accent);
+    color: var(--wc);
+    border-color: color-mix(in srgb, var(--wc) 36%, var(--line2));
+    background: color-mix(in srgb, var(--wc) 10%, transparent);
+  }
+  .badge.awdp {
+    color: var(--red);
+    border-color: color-mix(in srgb, var(--red) 42%, var(--line2));
+    background: color-mix(in srgb, var(--red) 9%, transparent);
+  }
+  .badge.warn {
+    color: var(--amber);
+    border-color: color-mix(in srgb, var(--amber) 42%, var(--line2));
+    background: color-mix(in srgb, var(--amber) 9%, transparent);
+  }
+  .badge.contest {
+    color: var(--gold);
+    border-color: color-mix(in srgb, var(--gold) 42%, var(--line2));
+    background: color-mix(in srgb, var(--gold) 9%, transparent);
+  }
+
+  /* Muteki stateBadge style */
+  .status {
+    flex: none; margin-left: auto; display: inline-flex; align-items: center; gap: 4px;
+    height: 19px; padding: 0 7px; border-radius: var(--r-pill);
+    font-size: 10px; font-weight: 700; white-space: nowrap;
+    border: 1px solid var(--line2); background: var(--panel2); color: var(--muted);
+  }
+  .status.running, .status.launching {
+    color: var(--accent);
+    border-color: color-mix(in srgb, var(--accent) 38%, var(--line));
+    background: color-mix(in srgb, var(--accent) 10%, transparent);
+  }
+  .status.idle_prompt {
+    color: var(--gold);
+    border-color: color-mix(in srgb, var(--gold) 42%, var(--line));
+    background: color-mix(in srgb, var(--gold) 10%, transparent);
+  }
+  .status.solved {
+    color: var(--green);
+    border-color: color-mix(in srgb, var(--green) 40%, var(--line));
+    background: color-mix(in srgb, var(--green) 11%, transparent);
+  }
+  .status.need_help {
+    color: var(--amber);
+    border-color: color-mix(in srgb, var(--amber) 45%, var(--line));
+    background: color-mix(in srgb, var(--amber) 12%, transparent);
+  }
+  .status.exited, .status.failed, .status.pane_gone {
+    color: var(--red);
+    border-color: color-mix(in srgb, var(--red) 40%, var(--line));
+    background: color-mix(in srgb, var(--red) 10%, transparent);
+  }
+
+  /* ── Multi-Attempt Worker Lanes Bar (Muteki .wlane-row inspired) ───────── */
+  .t-tabs {
+    flex: none; display: flex; align-items: center; gap: 4px; flex-wrap: wrap;
+    padding: 3px; border-radius: 7px; background: var(--panel2); border: 1px solid var(--line);
+  }
+  .t-tab {
+    --wc: var(--accent);
+    display: inline-flex; align-items: center; gap: 5px; min-height: 21px; height: 21px;
+    padding: 0 8px; font-size: 10.5px; font-weight: 650; border-radius: 5px;
+    background: transparent; border: 1px solid transparent; color: var(--muted);
+    box-shadow: none;
+  }
+  .t-tab:hover:not(:disabled) { color: var(--bright); background: var(--panel); border-color: var(--line); }
+  .t-tab.active {
+    color: var(--bright); background: var(--panel);
+    border-color: color-mix(in srgb, var(--wc) 45%, var(--line2));
+    box-shadow: var(--shadow-sm);
+  }
+  .t-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--dim); flex: none; }
+  .t-dot.running, .t-dot.launching { background: var(--accent); box-shadow: 0 0 6px color-mix(in srgb, var(--accent) 70%, transparent); }
+  .t-dot.idle_prompt { background: var(--gold); }
+  .t-dot.solved { background: var(--green); }
+  .t-dot.need_help { background: var(--amber); animation: pulse-dot 1.4s infinite; }
+  .t-dot.exited, .t-dot.failed, .t-dot.pane_gone { background: var(--red); }
+  .t-tab .port-tag {
+    font-family: var(--font-mono); font-size: 9px; font-weight: 500; color: var(--dim);
+  }
+
+  /* ── Signals & Metadata Strip (Target + Blackboard + Deliverables) ─────── */
+  .t-signals {
+    flex: none; display: flex; align-items: center; gap: 5px; flex-wrap: wrap; min-width: 0;
+  }
   .target {
-    flex: none; min-height: 25px; padding: 5px 7px; border-radius: 6px; background: rgba(9, 12, 18, .42);
-    border: 1px solid transparent; font: 10.5px/13px ui-monospace, SFMono-Regular, Consolas, monospace;
-    color: var(--dim); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; cursor: pointer;
+    flex: 1 1 160px; min-width: 0; min-height: 23px; padding: 3px 7px;
+    border-radius: 6px; background: var(--panel2); border: 1px solid var(--line);
+    font: 10.5px/15px var(--font-mono); color: var(--muted);
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap; cursor: pointer;
+    transition: border-color .12s var(--ease-out), color .12s var(--ease-out);
   }
-  .target:hover { color: var(--fg); border-color: var(--border); }
-  .note { flex: none; max-height: 34px; overflow: hidden; font-size: 11px; line-height: 16px; color: var(--orange); overflow-wrap: anywhere; }
+  .target:hover { color: var(--bright); border-color: var(--accent); background: var(--panel3); }
+  .target.empty { color: var(--dim); border-style: dashed; }
+
+  .workdir {
+    flex: none; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    font: 9.5px/14px var(--font-mono); color: var(--dim); cursor: copy; padding: 0 2px;
+  }
+  .workdir:hover { color: var(--accent); }
+
+  .board-info {
+    flex: none; max-width: 100%; font-size: 10.5px; font-weight: 600; color: var(--muted);
+    cursor: pointer; padding: 3px 8px; border-radius: 6px;
+    background: var(--panel2); border: 1px solid var(--line);
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    transition: border-color .12s var(--ease-out), color .12s var(--ease-out);
+  }
+  .board-info:hover { color: var(--bright); border-color: var(--accent); }
+  .board-info.hot {
+    color: var(--green);
+    border-color: color-mix(in srgb, var(--green) 38%, var(--line));
+    background: color-mix(in srgb, var(--green) 8%, var(--panel2));
+  }
+
+  .deliverable {
+    flex: none; max-width: 100%; font: 600 10px/15px var(--font-mono); color: var(--green);
+    cursor: pointer; padding: 3px 7px; border-radius: 6px;
+    background: color-mix(in srgb, var(--green) 9%, var(--panel2));
+    border: 1px solid color-mix(in srgb, var(--green) 42%, var(--line));
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .deliverable:hover { border-color: var(--green); filter: brightness(1.08); }
+
   .flag {
-    flex: none; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-    font: 10.5px/17px ui-monospace, SFMono-Regular, Consolas, monospace;
-    background: rgba(63, 214, 122, .06); border-radius: 6px; padding: 3px 7px; cursor: pointer;
+    flex: none; display: flex; align-items: center; gap: 6px;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    font: 600 10.5px/16px var(--font-mono);
+    background: color-mix(in srgb, var(--green) 10%, var(--panel2));
+    border-radius: 6px; padding: 3px 8px; cursor: pointer;
   }
-  .flag.real { border: 1px solid rgba(63, 214, 122, .55); color: #69e49b; }
-  pre.output {
-    flex: 1 1 auto; min-height: 0; overflow: auto; margin: 0; padding: 8px 9px;
-    border: 1px solid #1d2532; border-radius: 7px; background: rgba(5, 8, 13, .8);
-    color: #9da9ba; font: 10.5px/1.45 ui-monospace, SFMono-Regular, Consolas, monospace;
-    white-space: pre-wrap; overflow-wrap: anywhere; scrollbar-color: #354157 transparent; scrollbar-width: thin;
+  .flag.real {
+    border: 1px solid color-mix(in srgb, var(--green) 48%, var(--line));
+    color: var(--green);
   }
-  .actions { flex: none; display: grid; grid-template-columns: repeat(auto-fit, minmax(58px, 1fr)); gap: 5px; }
-  .actions button { width: 100%; min-width: 0; padding-inline: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .flag.real:hover { border-color: var(--green); background: color-mix(in srgb, var(--green) 15%, var(--panel2)); }
 
-  /* 赛事平台对话框的题目行 */
-  .q-row { display: grid; grid-template-columns: 22px minmax(0, 1fr) auto auto; gap: 8px; align-items: center; padding: 7px 6px; border-bottom: 1px solid var(--border-soft); font-size: 12px; }
+  .note {
+    flex: none; max-height: 34px; overflow: hidden; font-size: 11px; line-height: 15px;
+    padding: 3px 7px; border-radius: 6px;
+    color: var(--amber); background: color-mix(in srgb, var(--amber) 9%, transparent);
+    border: 1px solid color-mix(in srgb, var(--amber) 28%, var(--line));
+    overflow-wrap: anywhere;
+  }
+
+  /* 每题一个只读状态预览，不提供 Web 会话操作 */
+  pre.output-preview {
+    flex: 1 1 auto; min-height: 72px; overflow: auto; margin: 0; padding: 7px 9px;
+    contain: strict; border: 1px solid var(--term-border); border-radius: 7px;
+    background: var(--term-bg); color: var(--term-fg);
+    font: 10.5px/1.45 var(--font-mono);
+    white-space: pre-wrap; overflow-wrap: anywhere;
+    scrollbar-color: #354157 transparent; scrollbar-width: thin;
+  }
+  pre.output-preview:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+
+  /* ── Tile Action Bar ────────────────────────────────────────────────────── */
+  .actions {
+    flex: none; display: flex; align-items: center; gap: 5px; flex-wrap: nowrap;
+    margin-top: auto;
+  }
+  .actions button {
+    flex: 1 1 0; min-width: 0; min-height: 26px; height: 26px;
+    padding-inline: 5px; font-size: 11px; white-space: nowrap;
+    overflow: hidden; text-overflow: ellipsis; border-radius: 6px;
+  }
+  .actions button.icon-only { flex: 0 0 28px; padding: 0; }
+
+  /* ── Shared Blackboard Markdown Viewer ──────────────────────────────────── */
+  .board-filter-bar {
+    display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 8px;
+  }
+  .board-view {
+    max-height: 56vh; overflow: auto; background: var(--panel2);
+    border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px;
+    font-size: 12.5px; line-height: 1.6; overflow-wrap: anywhere;
+  }
+  .board-view .md-h { font-weight: 750; margin: 14px 0 6px; color: var(--bright); }
+  .board-view .md-h:first-child { margin-top: 0; }
+  .board-view .md-h1 { font-size: 14.5px; padding-bottom: 4px; border-bottom: 1px dashed var(--line2); }
+  .board-view .md-h2 {
+    font-size: 12.5px; color: var(--accent); text-transform: uppercase; letter-spacing: .04em;
+    border-bottom: 1px solid var(--line); padding-bottom: 4px;
+  }
+  .board-view .md-h3, .board-view .md-h4 { font-size: 12px; }
+  .board-view p { margin: 4px 0; }
+  .board-view ul { margin: 4px 0; padding-left: 18px; }
+  .board-view li { margin: 3px 0; }
+  .board-view code {
+    font: 11px var(--font-mono);
+    background: color-mix(in srgb, var(--accent) 11%, var(--panel));
+    border: 1px solid color-mix(in srgb, var(--accent) 22%, var(--line));
+    border-radius: 4px; padding: 1px 5px; color: var(--bright);
+  }
+  .board-view pre.code {
+    background: var(--term-bg); color: var(--term-fg);
+    border: 1px solid var(--term-border); border-radius: 7px;
+    padding: 9px 11px; overflow-x: auto; margin: 6px 0;
+  }
+  .board-view pre.code code { background: none; border: 0; padding: 0; color: inherit; }
+  .board-view strong { color: var(--bright); }
+  .board-view .verified-tag {
+    display: inline-block; font: 700 9.5px/1.3 var(--font-mono);
+    color: var(--green); background: color-mix(in srgb, var(--green) 12%, transparent);
+    border: 1px solid color-mix(in srgb, var(--green) 35%, var(--line));
+    border-radius: 4px; padding: 0 5px; margin-right: 4px;
+  }
+
+  /* ── Contest Questions Table Row (Muteki CompetitionBoard style) ───────── */
+  .q-row {
+    display: grid; grid-template-columns: 22px minmax(0, 1fr) auto auto;
+    gap: 10px; align-items: center; padding: 8px 10px;
+    border-bottom: 1px solid var(--line); font-size: 12px;
+    transition: background .1s var(--ease-out);
+  }
   .q-row:hover { background: var(--panel2); }
-  .q-row.imported { opacity: .62; }
-  .q-title { font-weight: 650; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .q-sub { color: var(--dim); font-size: 11px; margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .q-tag { font-size: 10px; padding: 1px 6px; border-radius: 999px; border: 1px solid var(--border); color: var(--dim); white-space: nowrap; }
-  .q-tag.solved { color: #69e49b; border-color: #27894f; }
-  .q-tag.docker { color: #79bbff; border-color: #397fbd; }
+  .q-row.imported { opacity: .58; }
+  .q-title { font-weight: 650; color: var(--bright); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .q-sub { color: var(--muted); font-size: 11px; font-family: var(--font-mono); margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .q-tag {
+    font-size: 10px; font-weight: 650; padding: 1px 7px; border-radius: var(--r-pill);
+    border: 1px solid var(--line2); color: var(--muted); white-space: nowrap;
+  }
+  .q-tag.solved {
+    color: var(--green);
+    border-color: color-mix(in srgb, var(--green) 40%, var(--line));
+    background: color-mix(in srgb, var(--green) 10%, transparent);
+  }
+  .q-tag.docker {
+    color: var(--accent);
+    border-color: color-mix(in srgb, var(--accent) 40%, var(--line));
+    background: color-mix(in srgb, var(--accent) 10%, transparent);
+  }
 
-  .empty-hint { color: var(--dim); text-align: center; margin-top: 80px; }
-  dialog { background: var(--panel-raised); color: var(--fg); border: 1px solid #374359; border-radius: 14px; padding: 20px; width: min(640px, 92vw); box-shadow: 0 24px 80px rgba(0, 0, 0, .55); }
-  dialog::backdrop { background: rgba(0, 0, 0, .68); }
-  dialog h2 { margin-top: 0; font-size: 16px; }
-  label { display: block; font-size: 13px; color: var(--dim); margin: 10px 0 4px; }
-  input[type=text], textarea, select { width: 100%; background: #101620; border: 1px solid var(--border); border-radius: 7px; color: var(--fg); padding: 8px 10px; font-size: 13px; font-family: inherit; outline: none; }
-  input[type=text]:focus, textarea:focus, select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(88, 166, 255, .1); }
-  textarea { resize: vertical; }
+  /* ── Empty State (Muteki .panel-empty style) ────────────────────────────── */
+  .empty-hint {
+    max-width: 440px; margin: 64px auto; padding: 36px 28px;
+    border: 1px dashed var(--line2); border-radius: 14px;
+    background: color-mix(in srgb, var(--panel) 75%, transparent);
+    text-align: center; color: var(--muted); font-size: 13px; line-height: 1.6;
+  }
+  .empty-hint[hidden] { display: none !important; }
+  .empty-ico {
+    width: 44px; height: 44px; margin: 0 auto 10px; border-radius: 11px;
+    display: grid; place-items: center; font-size: 20px;
+    background: var(--ink-wash); border: 1px solid var(--line); color: var(--accent);
+  }
+  .empty-title { color: var(--bright); font-weight: 700; font-size: 14px; margin-bottom: 4px; }
+
+  /* ── Dialogs / Modals (Muteki modal style) ──────────────────────────────── */
+  dialog {
+    background: var(--panel); color: var(--text);
+    border: 1px solid var(--line2); border-radius: 14px;
+    padding: 20px 22px; width: min(650px, 94vw); max-height: 90vh;
+    box-shadow: var(--shadow-pop);
+    animation: pop-in .15s var(--ease-out);
+  }
+  dialog::backdrop {
+    background: rgba(9, 12, 18, .66);
+  }
+  dialog h2 {
+    margin: 0 0 12px; font-size: 15.5px; font-weight: 750; color: var(--bright);
+    display: flex; align-items: center; justify-content: space-between; gap: 8px;
+    padding-bottom: 10px; border-bottom: 1px dashed var(--line2);
+  }
+  label { display: block; font-size: 12px; font-weight: 600; color: var(--muted); margin: 11px 0 5px; }
+  input[type=text], input[type=search], textarea, select {
+    width: 100%; min-width: 0; background: var(--panel2); border: 1px solid var(--line2);
+    border-radius: var(--r-input); color: var(--bright); padding: 7px 10px;
+    font-size: 12.5px; font-family: inherit; outline: none;
+    transition: border-color .12s var(--ease-out), background .12s var(--ease-out);
+  }
+  input[type=text]:focus, input[type=search]:focus, textarea:focus, select:focus {
+    border-color: var(--accent); background: var(--panel);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 14%, transparent);
+  }
+  textarea { resize: vertical; line-height: 1.5; }
+  .form-row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .form-row > * { min-width: 0; }
   .cats { display: flex; gap: 6px; flex-wrap: wrap; }
-  .cats button.active { background: var(--accent); border-color: var(--accent); color: #fff; }
-  .tpl-preview { font-size: 12px; color: var(--dim); background: var(--panel2); border-radius: 6px; padding: 8px; margin-top: 6px; max-height: 110px; overflow-y: auto; white-space: pre-wrap; }
-  .modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
-  .root-item { padding: 7px 10px; border-radius: 6px; cursor: pointer; font-family: ui-monospace, monospace; font-size: 13px; }
-  .root-item:hover { background: var(--panel2); }
-  .root-item.current { color: var(--green); }
-  .err { color: var(--red); font-size: 13px; margin-top: 8px; }
+  .cats button {
+    min-height: 28px; padding: 3px 11px; border-radius: var(--r-pill);
+    background: var(--panel2); border: 1px solid var(--line2); color: var(--muted);
+    font-family: var(--font-mono); font-size: 11.5px;
+  }
+  .cats button.active {
+    background: color-mix(in srgb, var(--accent) 14%, var(--panel));
+    border-color: var(--accent); color: var(--accent); font-weight: 750;
+  }
+  .tpl-preview {
+    font: 11px/1.5 var(--font-mono); color: var(--muted);
+    background: var(--panel2); border: 1px solid var(--line);
+    border-radius: 7px; padding: 8px 10px; margin-top: 6px;
+    max-height: 100px; overflow-y: auto; white-space: pre-wrap;
+  }
+  .modal-actions {
+    display: flex; justify-content: flex-end; align-items: center; gap: 8px;
+    margin-top: 16px; padding-top: 12px; border-top: 1px dashed var(--line2);
+  }
+  .root-item {
+    padding: 8px 10px; border-radius: 7px; cursor: pointer;
+    font-family: var(--font-mono); font-size: 12px;
+    border: 1px solid transparent; margin-bottom: 3px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .root-item:hover { background: var(--panel2); border-color: var(--line); }
+  .root-item.current {
+    color: var(--green); font-weight: 650;
+    background: color-mix(in srgb, var(--green) 8%, var(--panel2));
+    border-color: color-mix(in srgb, var(--green) 32%, var(--line));
+  }
+  .err { color: var(--red); font-size: 12px; font-weight: 600; margin-top: 8px; }
+  .err:empty { display: none; }
 
-  @media (max-width: 700px) {
+  /* ── Floating Toast Stack (Muteki wsettings-feedback style) ─────────────── */
+  #toastHost {
+    position: fixed; bottom: 18px; right: 18px; z-index: 100;
+    display: flex; flex-direction: column; gap: 8px; pointer-events: none;
+    max-width: min(420px, 92vw);
+  }
+  .toast-item {
+    pointer-events: auto; display: flex; align-items: flex-start; gap: 9px;
+    padding: 10px 14px; border-radius: 10px;
+    background: var(--panel); color: var(--bright);
+    border: 1px solid var(--line2); box-shadow: var(--shadow-pop);
+    font-size: 12.5px; line-height: 1.45;
+    animation: fade-up .18s var(--ease-out);
+  }
+  .toast-item.ok { border-left: 3px solid var(--green); }
+  .toast-item.err { border-left: 3px solid var(--red); color: var(--red); margin-top: 0; }
+  .toast-item.warn { border-left: 3px solid var(--amber); }
+
+  @media (max-width: 720px) {
     header { flex-wrap: wrap; padding: 10px 12px; gap: 8px; }
     header .chip { order: 3; max-width: none; width: 100%; }
-    #elsewhere { order: 4; width: 100%; }
-    #board { padding: 16px 12px 24px; }
+    #elsewhere { order: 4; }
+    .deck-subhead, #board { padding-inline: 12px; }
     .tiles { grid-template-columns: 1fr; }
-  }
-  @media (max-width: 420px) {
-    :root { --tile-height: 342px; }
-    .actions { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .form-row { grid-template-columns: 1fr; }
   }
 </style>
 </head>
 <body>
 
 <header>
-  <h1>⚑ ubz-ctf</h1>
+  <div class="brand-wrap">
+    <div class="brand-mark">⚑</div>
+    <h1>ubz-ctf <em>DECK</em></h1>
+  </div>
   <span class="chip" id="rootChip" role="button" tabindex="0" title="点击切换赛事根目录">未设置根目录</span>
   <span id="elsewhere"></span>
   <span class="spacer"></span>
-  <button id="btnContest">🏆 赛事平台</button>
+
+  <div class="refresh-controls" title="自动刷新频率与手动同步">
+    <button type="button" class="refresh-btn" id="btnPollRate" title="点击切换自动刷新间隔（8s / 15s / 30s / 手动）">⟳ 8s</button>
+    <button type="button" class="refresh-btn" id="btnManualRefresh" title="立即刷新面板">刷新</button>
+  </div>
+
+  <button id="btnContest" hidden>🏆 赛事平台</button>
   <button class="primary" id="btnNew">+ 新建题目</button>
 </header>
 
+<!-- Muteki Command Deck Overview & Filter Bar -->
+<section class="deck-subhead" id="deckSubhead" hidden>
+  <div class="quiet-meta" id="metricsBar">
+    <div class="qm active" data-status-filter="all" title="点击查看全部题目">
+      <span class="qk">TOTAL · 总题数</span>
+      <span class="qv" id="mTotal">0</span>
+    </div>
+    <div class="qm" data-status-filter="running" title="点击只看解题中题目">
+      <span class="qk"><span class="t-dot running" style="display:inline-block"></span> RUNNING · 解题中</span>
+      <span class="qv" id="mRunning" style="color:var(--accent)">0</span>
+    </div>
+    <div class="qm" data-status-filter="need_help" title="点击只看需要人工介入的题目">
+      <span class="qk"><span class="t-dot need_help" style="display:inline-block"></span> ATTENTION · 需人工</span>
+      <span class="qv" id="mHelp" style="color:var(--amber)">0</span>
+    </div>
+    <div class="qm" data-status-filter="solved" title="点击只看已解出题目">
+      <span class="qk"><span class="t-dot solved" style="display:inline-block"></span> SOLVED · 已解出</span>
+      <span class="qv" id="mSolved" style="color:var(--green)">0</span>
+    </div>
+    <div class="qm" data-status-filter="anomaly" title="点击只看进程退出/窗口丢失/失败/待启动题目">
+      <span class="qk"><span class="t-dot exited" style="display:inline-block"></span> IDLE / EXIT · 待处理</span>
+      <span class="qv" id="mIdle">0</span>
+    </div>
+  </div>
+
+  <div class="deck-toolbar">
+    <div class="toolbar-search">
+      <span style="font-size:12px">⌕</span>
+      <input type="search" id="searchInput" placeholder="搜索题名 / 靶机 / 分类 / harness……" autocomplete="off">
+      <button type="button" class="clear-btn" id="searchClear" hidden title="清空搜索">✕</button>
+      <kbd>/</kbd>
+    </div>
+    <div class="seg-group" id="catFilterBar" aria-label="按分类筛选"></div>
+    <span class="spacer"></span>
+    <span id="filterSummary" class="mono" style="font-size:11px;color:var(--muted)"></span>
+  </div>
+</section>
+
 <div id="board"></div>
-<div class="empty-hint" id="emptyHint" hidden>当前赛事还没有题目，点右上角「新建题目」开始</div>
+<div class="empty-hint" id="emptyHint" hidden>
+  <div class="empty-ico">⚑</div>
+  <div class="empty-title">当前赛事还没有题目</div>
+  <div>点击右上角「+ 新建题目」手动建题，或通过「🏆 赛事平台」批量拉取导入。</div>
+</div>
 
 <!-- 新建题目 -->
 <dialog id="dlgNew">
-  <h2>新建题目</h2>
-  <label>题目名称</label>
-  <input type="text" id="fName" placeholder="babyheap">
+  <h2><span>新建题目</span><button type="button" class="ghost" onclick="dlgNew.close()">✕</button></h2>
+  <div class="form-row">
+    <div>
+      <label style="margin-top:0">题目名称</label>
+      <input type="text" id="fName" placeholder="例如：babyheap">
+    </div>
+    <div>
+      <label style="margin-top:0">目标地址（靶机 / 远程地址，可空）</label>
+      <input type="text" id="fTarget" placeholder="http://1.2.3.4:8080 或 1.2.3.4:1337">
+    </div>
+  </div>
   <label>类型（决定初始提示词模板）</label>
   <div class="cats" id="fCats"></div>
   <div class="tpl-preview" id="fTplPreview"></div>
   <textarea id="fCustomPrompt" rows="5" hidden placeholder="自定义初始提示词，可使用 {题目信息} {目标} {工作目录} {附件清单} 变量"></textarea>
+  <label id="fAwdpWrap" hidden style="margin-top:10px;color:var(--text)"><input type="checkbox" id="fAwdp"> ⚔ AWDP 攻防模式（攻击侧正常拿 flag；验证漏洞点写板后自动接力开防御路修洞保服务）</label>
   <label>题目信息（描述、提示、给的条件）</label>
-  <textarea id="fInfo" rows="4" placeholder="题目描述原文"></textarea>
-  <label>目标地址（靶机 / 远程地址，可空）</label>
-  <input type="text" id="fTarget" placeholder="http://1.2.3.4:8080 或 1.2.3.4:1337">
-  <label>附件下载链接（每行一个，可空）</label>
-  <textarea id="fUrls" rows="2" placeholder="https://.../task.zip"></textarea>
-  <label>或本地上传附件（可多选，压缩包自动解压）</label>
-  <input type="file" id="fFiles" multiple>
-  <label>Harness</label>
-  <select id="fHarness"></select>
-  <label style="margin-top:12px"><input type="checkbox" id="fAutoLaunch" checked> 创建后立即启动（开 pane、起 harness、注入提示词）</label>
+  <textarea id="fInfo" rows="3" placeholder="粘贴题目描述原文、hint 或环境说明"></textarea>
+  <div class="form-row">
+    <div>
+      <label>附件下载链接（每行一个，可空）</label>
+      <textarea id="fUrls" rows="2" placeholder="https://.../task.zip"></textarea>
+    </div>
+    <div>
+      <label>或本地上传附件（可多选，自动解压）</label>
+      <input type="file" id="fFiles" multiple style="padding:5px">
+    </div>
+  </div>
+  <label>Harness（可多选，多路同时开跑，共享 board.md 黑板）</label>
+  <div class="cats" id="fHarnesses"></div>
+  <div id="fDefenseBlock" hidden style="margin-top:10px;padding:10px 12px;border:1px solid var(--line2);border-radius:9px;background:var(--panel2)">
+    <label style="margin-top:0;color:var(--bright)"><input type="checkbox" id="fAutoDefense" checked> 漏洞点接力：攻击路在黑板写下已验证漏洞点后，自动开防御路直奔该洞修补</label>
+    <label>防御 Harness（自动接力开出的防御路用它；单选）</label>
+    <div class="cats" id="fDefenseHarnesses"></div>
+    <label>防御规则（可选：修补路径、白名单命令等，随题注入防御提示词）</label>
+    <textarea id="fDefenseRules" rows="2" placeholder="例：修补路径 ['/home/ctf']；白名单命令 ['cp','mv','chmod','pkill','sleep']"></textarea>
+    <label>交付压缩包模板（可选：如 update.tar.gz，防御路参照其结构打包同名产物）</label>
+    <input type="file" id="fDefenseTplFile">
+    <label>防御提示词（预填防御模板，可按本题情况修改）</label>
+    <textarea id="fDefensePrompt" rows="6"></textarea>
+  </div>
+  <label style="margin-top:12px;color:var(--text)"><input type="checkbox" id="fAutoLaunch" checked> 创建后立即启动（开 pane、起 harness、注入提示词）</label>
   <div class="err" id="fErr"></div>
   <div class="modal-actions">
     <button onclick="dlgNew.close()">取消</button>
-    <button class="primary" id="btnCreate">创建</button>
+    <button class="primary" id="btnCreate">创建题目</button>
   </div>
 </dialog>
 
 <!-- 根目录切换 -->
 <dialog id="dlgRoot">
-  <h2>赛事根目录</h2>
-  <div id="rootList"></div>
-  <label>新路径</label>
-  <input type="text" id="fRootPath" placeholder="~/ctf/2026qwb">
-  <label><input type="checkbox" id="fRootCreate" checked> 不存在则创建</label>
+  <h2><span>赛事根目录</span><button type="button" class="ghost" onclick="dlgRoot.close()">✕</button></h2>
+  <div id="rootList" style="max-height:36vh;overflow-y:auto"></div>
+  <label>切换或新建路径</label>
+  <input type="text" id="fRootPath" placeholder="~/ctf/2026qwb" class="mono">
+  <label>赛事模式（按根目录独立保存）</label>
+  <select id="fRootMode">
+    <option value="traditional">传统 CTF（默认，不加载平台适配器）</option>
+    <option value="api_auto">API 全自动赛事（启用导入、提交、重置）</option>
+  </select>
+  <div style="font-size:11px;color:var(--muted);margin-top:4px">只有 API 全自动模式会读取 contests/*.yaml 和对应根目录的平台 Token。</div>
+  <label style="color:var(--text)"><input type="checkbox" id="fRootCreate" checked> 目录不存在则自动创建</label>
   <div class="err" id="fRootErr"></div>
   <div class="modal-actions">
     <button onclick="dlgRoot.close()">关闭</button>
-    <button class="primary" id="btnSetRoot">切换</button>
+    <button class="primary" id="btnSetRoot">切换目录</button>
   </div>
 </dialog>
 
 <!-- 手动 flag -->
 <dialog id="dlgFlag">
-  <h2>登记 / 修改 flag</h2>
-  <input type="text" id="fFlag" placeholder="flag{...}">
-  <p style="font-size:12px;color:var(--dim)">保存非空 flag 会标记为「已解出」；清空后保存会撤销该状态。</p>
-  <p style="font-size:12px;color:var(--dim)" id="fFlagHint" hidden>该题绑定了赛事平台：「提交到平台」会先让平台判题，判对才保存并标记已解出。</p>
+  <h2><span>登记 / 提交 Flag</span><button type="button" class="ghost" onclick="dlgFlag.close()">✕</button></h2>
+  <label style="margin-top:0">Flag 内容</label>
+  <input type="text" id="fFlag" placeholder="flag{...}" class="mono">
+  <label>来自哪一路（可多开题溯源，可空）</label>
+  <select id="fFlagAttempt"></select>
+  <label style="margin-top:10px;color:var(--text)"><input type="checkbox" id="fFlagStopOthers"> 同时停掉其余在跑的路（flag 可能有错，默认不停）</label>
+  <p style="font-size:12px;color:var(--muted);margin:8px 0 0">保存非空 flag 会标记为「已解出」；清空后保存会撤销该状态。</p>
+  <p style="font-size:12px;color:var(--accent);margin:4px 0 0" id="fFlagHint" hidden>🏆 该题绑定了赛事平台：「提交到平台」会先调用平台判题接口，判对才落盘并标记已解出。</p>
   <div class="err" id="fFlagErr"></div>
   <div class="modal-actions">
     <button onclick="dlgFlag.close()">取消</button>
-    <button id="btnSubmitFlag" hidden>提交到平台</button>
-    <button class="primary" id="btnSetFlag">保存</button>
+    <button id="btnSubmitFlag" class="success" hidden>🏆 提交到平台判题</button>
+    <button class="primary" id="btnSetFlag">本地保存</button>
   </div>
 </dialog>
 
 <!-- 删除题目 -->
 <dialog id="dlgDel">
-  <h2>删除题目</h2>
+  <h2><span>删除题目</span><button type="button" class="ghost" onclick="dlgDel.close()">✕</button></h2>
   <div class="target" id="delInfo" style="cursor:default"></div>
-  <p style="font-size:13px;color:var(--dim)">pane 会被杀掉。题目目录里有 prompt.md、附件、agent 写的 exploit/writeup 等文件。</p>
+  <p style="font-size:12.5px;color:var(--muted);line-height:1.6">所有活跃 pane 会被终止。题目目录里包含 <code>prompt.md</code>、附件及 agent 编写的 exploit / writeup 文件。</p>
   <div class="modal-actions">
     <button onclick="dlgDel.close()">取消</button>
-    <button id="btnDelKeep">移除出面板（保留文件）</button>
-    <button class="danger" id="btnDelAll">连同目录一起删除</button>
+    <button id="btnDelKeep">仅移出面板（保留目录）</button>
+    <button class="danger" id="btnDelAll">连同磁盘目录彻底删除</button>
   </div>
 </dialog>
 
-<!-- 靶机补充 -->
+<!-- 靶机补充 / 信息更新 -->
 <dialog id="dlgTarget">
-  <h2>靶机 / 远程地址</h2>
+  <h2><span>靶机地址 &amp; 环境补充</span><button type="button" class="ghost" onclick="dlgTarget.close()">✕</button></h2>
   <div class="target" id="tgtName" style="cursor:default"></div>
-  <label>远程地址（留空表示暂无）</label>
-  <input type="text" id="fTgt" placeholder="1.2.3.4:1337 或 http://1.2.3.4:8080">
-  <label>同时发给 agent 的消息（可编辑；仅 agent 运行中时能发）</label>
-  <textarea id="fTgtMsg" rows="4"></textarea>
+  <label>远程靶机地址（留空表示暂无）</label>
+  <input type="text" id="fTgt" placeholder="1.2.3.4:1337 或 http://1.2.3.4:8080" class="mono">
+  <p style="font-size:12px;color:var(--muted);margin:8px 0 0">这里只保存题目配置。需要通知或恢复 Agent 时，请在其 tmux 会话中操作。</p>
   <div class="err" id="fTgtErr"></div>
   <div class="modal-actions">
     <button onclick="dlgTarget.close()">取消</button>
-    <button id="btnTgtSave">仅保存</button>
-    <button class="primary" id="btnTgtSend">保存并发送</button>
+    <button class="primary" id="btnTgtSave">保存靶机地址</button>
   </div>
 </dialog>
 
 <!-- 赛事平台 -->
-<dialog id="dlgContest" style="width:min(760px, 94vw)">
-  <h2>赛事平台</h2>
+<dialog id="dlgContest" style="width:min(780px, 95vw)">
+  <h2><span>🏆 赛事平台题目同步</span><button type="button" class="ghost" onclick="dlgContest.close()">✕</button></h2>
   <div style="display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap">
     <div style="flex:1;min-width:190px">
-      <label style="margin-top:0">比赛（适配器 = contests/ 下的 yaml）</label>
+      <label style="margin-top:0">比赛适配器（contests/*.yaml）</label>
       <select id="cAdapter"></select>
     </div>
-    <div style="flex:1.4;min-width:220px">
-      <label style="margin-top:0">队伍 token</label>
-      <input type="text" id="cToken" autocomplete="off" spellcheck="false">
+    <div id="cServerHostWrap" style="flex:1.4;min-width:220px" hidden>
+      <label style="margin-top:0" id="cServerHostLabel">比赛服务地址</label>
+      <input type="text" id="cServerHost" autocomplete="off" spellcheck="false" class="mono" placeholder="https://example.com">
     </div>
-    <button class="primary" id="btnFetchQ">拉取题目</button>
+    <div style="flex:1.4;min-width:220px">
+      <label style="margin-top:0">队伍 Token</label>
+      <input type="text" id="cToken" autocomplete="off" spellcheck="false" class="mono">
+    </div>
+    <button class="primary" id="btnFetchQ" style="height:33px">同步 / 刷新</button>
   </div>
-  <div id="cNote" style="font-size:12px;color:var(--dim);margin-top:8px"></div>
+  <div id="cNote" class="mono" style="font-size:11px;color:var(--muted);margin-top:8px"></div>
+  <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:8px">
+    <div class="seg-group" id="cTabs">
+      <button type="button" class="seg-btn active" id="cTabQuestions">题目</button>
+      <button type="button" class="seg-btn" id="cTabOverview">概览 / 规则</button>
+      <button type="button" class="seg-btn" id="cTabNotices">公告</button>
+    </div>
+    <label style="margin:0;display:flex;align-items:center;gap:4px;font-size:11px"><input type="checkbox" id="cAutoRefresh"> 每 60 秒刷新</label>
+    <span class="spacer"></span>
+    <span id="cSyncStatus" class="mono" style="font-size:10.5px;color:var(--dim)"></span>
+  </div>
   <div class="err" id="cErr"></div>
-  <div id="cList" style="margin-top:10px;max-height:44vh;overflow:auto"></div>
-  <div class="modal-actions" style="align-items:center;justify-content:flex-start;gap:14px">
-    <label style="margin:0;display:flex;gap:5px;align-items:center;color:var(--dim)"><input type="checkbox" id="cCheckAll"> 全选</label>
-    <label style="margin:0;display:flex;gap:5px;align-items:center;color:var(--dim)" title="批量导入时每题都会开 pane 起 harness"><input type="checkbox" id="cAutoLaunch"> 导入后立即启动</label>
-    <label style="margin:0;display:flex;gap:5px;align-items:center;color:var(--dim)" title="一键把下面所有未导入题的 harness 设为同一个">全部设为 <select id="cHarness" style="width:auto"></select></label>
+  <div id="cOverviewView" hidden style="margin-top:10px">
+    <div id="cOverviewStats" style="font-size:13px;color:var(--bright);margin-bottom:8px"></div>
+    <pre id="cMatchInfo" class="board-view" style="white-space:pre-wrap;max-height:52vh"></pre>
+  </div>
+  <div id="cNoticesView" hidden style="margin-top:10px;display:grid;grid-template-columns:minmax(180px,1fr) minmax(280px,2fr);gap:10px">
+    <div id="cNoticeList" style="max-height:52vh;overflow:auto;border:1px solid var(--line);border-radius:8px;background:var(--panel2)"></div>
+    <pre id="cNoticeDetail" class="board-view" style="white-space:pre-wrap;max-height:52vh;margin:0">选择一条公告查看详情</pre>
+  </div>
+  <div id="cList" style="margin-top:10px;max-height:46vh;overflow:auto;border:1px solid var(--line);border-radius:8px;background:var(--panel2)"></div>
+  <div class="modal-actions" id="cImportActions" style="justify-content:flex-start;flex-wrap:wrap;gap:12px">
+    <label style="margin:0;display:flex;gap:5px;align-items:center;color:var(--text)"><input type="checkbox" id="cCheckAll"> 全选未导入</label>
+    <label style="margin:0;display:flex;gap:5px;align-items:center;color:var(--text)" title="批量导入时每题都会开 pane 起 harness"><input type="checkbox" id="cAutoLaunch"> 导入后立即启动</label>
+    <label style="margin:0;display:flex;gap:5px;align-items:center;color:var(--text)" title="一键把下面所有未导入题的 harness 设为同一个">统一 Harness <select id="cHarness" style="width:auto;padding:3px 8px"></select></label>
     <span class="spacer"></span>
     <button onclick="dlgContest.close()">关闭</button>
-    <button class="primary" id="btnImport">导入所选</button>
+    <button class="primary" id="btnImport">导入所选题目</button>
+  </div>
+</dialog>
+
+<!-- 加开一路 -->
+<dialog id="dlgAdd">
+  <h2><span>＋ 加开并行 Worker 路</span><button type="button" class="ghost" onclick="dlgAdd.close()">✕</button></h2>
+  <div class="target" id="addName" style="cursor:default"></div>
+  <label>选择 Harness（独立工作目录 runs/&lt;h&gt;/ 与专属端口段，共享 board.md）</label>
+  <select id="fAddHarness"></select>
+  <label>该路附加指令（可选：分工定位 / 接力提示）</label>
+  <textarea id="fAddDirective" rows="3" placeholder="例如：先读 board.md 接力，避开 Dead-ends 中已否证方向，主攻逆向与协议分析"></textarea>
+  <label style="margin-top:10px;color:var(--text)" id="fAddRoleWrap" hidden><input type="checkbox" id="fAddDefense"> 🛡 作为防御路启动（使用防御提示词：修补漏洞保服务，产出修补包）</label>
+  <label style="margin-top:10px;color:var(--text)"><input type="checkbox" id="fAddLaunch" checked> 创建后立即启动这一路</label>
+  <div class="err" id="fAddErr"></div>
+  <div class="modal-actions">
+    <button onclick="dlgAdd.close()">取消</button>
+    <button class="primary" id="btnAddAttempt">确认加开</button>
+  </div>
+</dialog>
+
+<!-- 共享黑板 -->
+<dialog id="dlgBoard" style="width:min(820px, 95vw)">
+  <h2>
+    <span>📋 共享证据黑板 <small class="mono" style="font-size:11.5px;color:var(--muted);font-weight:500" id="boardSub"></small></span>
+    <button type="button" class="ghost" onclick="dlgBoard.close()">✕</button>
+  </h2>
+  <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px">
+    <div class="board-filter-bar" id="boardSecTabs" style="margin-bottom:0;flex:1"></div>
+  </div>
+  <div class="board-view" id="boardView">加载中……</div>
+  <div class="err" id="boardErr"></div>
+  <div class="modal-actions">
+    <span class="spacer"></span>
+    <button id="btnBoardCopy">复制全文</button>
+    <button id="btnBoardReload">⟳ 刷新</button>
+    <button class="primary" onclick="dlgBoard.close()">关闭</button>
   </div>
 </dialog>
 
 <!-- 全局隐藏的文件选择器: "📎 附件"用 -->
 <input type="file" id="fUpload" multiple hidden>
 
+<!-- 非阻塞 Toast 容器 -->
+<div id="toastHost" aria-live="polite"></div>
+
 <script>
 const $ = id => document.getElementById(id);
-const dlgNew = $('dlgNew'), dlgRoot = $('dlgRoot'), dlgFlag = $('dlgFlag'), dlgDel = $('dlgDel'), dlgTarget = $('dlgTarget'), dlgContest = $('dlgContest');
-let cfg = null, templates = {}, curCat = null, flagTarget = null, delTarget = null, uploadTarget = null, tgtCh = null;
-let contests = [], contestQs = [], contestId = null;
-let boardSignature = '';
-const outputScroll = new Map();
+const dlgNew = $('dlgNew'), dlgRoot = $('dlgRoot'), dlgFlag = $('dlgFlag'), dlgDel = $('dlgDel'),
+      dlgTarget = $('dlgTarget'), dlgContest = $('dlgContest'), dlgAdd = $('dlgAdd'),
+      dlgBoard = $('dlgBoard');
 
+let cfg = null, templates = {}, defenseTemplates = {}, curCat = null;
+let flagTarget = null, delTarget = null, uploadTarget = null, tgtCh = null, addTarget = null, boardTarget = null;
+let contests = [], contestQs = [], contestId = null, contestSyncing = false, contestRefreshTimer = null, contestView = 'questions';
+let contestChecked = new Map(), contestHarnesses = new Map(), contestNoticeItems = [];
+let boardSignature = '', layoutSignature = '', catBarSignature = '', lastData = null, rawBoardMarkdown = '', boardSecFilter = 'all';
+let filterStatus = 'all', filterCat = 'all', searchQuery = '', searchTimer = null;
+let pollIntervalMs = 8000, pollTimer = null, isRefreshing = false, dataVersion = 0;
+
+const activeAttempt = new Map();   // challenge id -> 当前选中 attempt 的 aid
+
+// ---------------- Harness Identity & Refresh Preferences ----------------
+const ENGINE_COLOR = {
+  claude: 'var(--eng-claude)',
+  codex: 'var(--eng-codex)',
+  cursor: 'var(--eng-cursor)',
+  gemini: 'var(--eng-gemini)',
+  agy: 'var(--eng-gemini)',
+  deepseek: 'var(--eng-deepseek)',
+  dsh: 'var(--eng-dsh)',
+  kimi: 'var(--eng-kimi)',
+  opencode: 'var(--eng-opencode)',
+  pi: 'var(--eng-pi)',
+  zcode: 'var(--eng-zcode)',
+  qwen: 'var(--eng-qwen)',
+};
+function engineColor(name) {
+  const k = (name || '').toLowerCase();
+  for (const [eng, col] of Object.entries(ENGINE_COLOR)) {
+    if (k.includes(eng)) return col;
+  }
+  return 'var(--eng-default)';
+}
+
+const POLL_OPTIONS = [8000, 15000, 30000, 0];
+function applyPollRate(ms) {
+  pollIntervalMs = POLL_OPTIONS.includes(ms) ? ms : 8000;
+  localStorage.setItem('ubz.pollMs', String(pollIntervalMs));
+  $('btnPollRate').textContent = pollIntervalMs > 0 ? `⟳ ${pollIntervalMs / 1000}s` : '⟳ 手动';
+  scheduleNextRefresh();
+}
+
+function initRefreshPreference() {
+  const savedPoll = parseInt(localStorage.getItem('ubz.pollMs') ?? '8000', 10);
+  applyPollRate(Number.isNaN(savedPoll) ? 8000 : savedPoll);
+}
+$('btnPollRate').onclick = () => {
+  const next = POLL_OPTIONS[(POLL_OPTIONS.indexOf(pollIntervalMs) + 1) % POLL_OPTIONS.length];
+  applyPollRate(next);
+  toast(next > 0 ? `已切换自动刷新间隔为 ${next / 1000} 秒` : '已暂停自动刷新（可点击「刷新」手动同步）');
+};
+$('btnManualRefresh').onclick = () => {
+  refresh(true);
+};
+initRefreshPreference();
+
+// ---------------- Toast Notification ----------------
+function toast(msg, tone = 'ok', ms = 3400) {
+  const host = $('toastHost');
+  const el = document.createElement('div');
+  el.className = `toast-item ${tone}`;
+  el.textContent = msg;
+  host.appendChild(el);
+  setTimeout(() => {
+    el.style.opacity = '0';
+    el.style.transition = 'opacity .2s ease';
+    setTimeout(() => el.remove(), 220);
+  }, ms);
+}
+
+// ---------------- API Helper ----------------
 async function api(path, method = 'GET', body = null) {
   const opt = { method, headers: { 'Content-Type': 'application/json' } };
   if (body) opt.body = JSON.stringify(body);
@@ -297,64 +1079,352 @@ async function api(path, method = 'GET', body = null) {
 }
 
 const STATUS_LABEL = {
-  created: '已创建', downloading: '下载中', ready: '就绪', launching: '启动中',
+  created: '已创建', downloading: '下载中', ready: '待启动', launching: '启动中',
   running: '解题中', need_help: '需要人工', solved: '已解出', exited: '进程退出',
   pane_gone: '窗口丢失', stopped: '已停止', failed: '失败', archived: '已归档',
 };
 const CAT_ORDER = ['web', 'pwn', 're', 'misc', 'crypto', 'custom'];
-const CAT_COLOR = { web: 'var(--accent)', pwn: 'var(--red)', re: 'var(--purple)', misc: 'var(--orange)', crypto: 'var(--green)', custom: 'var(--gray)' };
+const CAT_COLOR = {
+  web: 'var(--accent)', pwn: 'var(--red)', re: 'var(--purple)',
+  misc: 'var(--amber)', crypto: 'var(--green)', custom: 'var(--gray)',
+};
 
-function rememberOutputScroll(board) {
-  for (const pre of board.querySelectorAll('pre.output[data-challenge-id]')) {
-    const bottom = Math.max(0, pre.scrollHeight - pre.clientHeight);
-    outputScroll.set(pre.dataset.challengeId, {
-      top: pre.scrollTop,
-      atBottom: bottom - pre.scrollTop <= 10,
-    });
+// ---------------- Filter & Search Wiring ----------------
+for (const qm of document.querySelectorAll('#metricsBar .qm')) {
+  qm.onclick = () => {
+    const st = qm.dataset.statusFilter;
+    filterStatus = (filterStatus === st && st !== 'all') ? 'all' : st;
+    for (const x of document.querySelectorAll('#metricsBar .qm')) {
+      x.classList.toggle('active', x.dataset.statusFilter === filterStatus);
+    }
+    if (lastData) { boardSignature = ''; renderBoard(lastData); }
+  };
+}
+
+$('searchInput').oninput = () => {
+  const val = $('searchInput').value.trim().toLowerCase();
+  $('searchClear').hidden = !val;
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(() => {
+    searchQuery = val;
+    if (lastData) { boardSignature = ''; renderBoard(lastData); }
+  }, 150);
+};
+$('searchClear').onclick = () => {
+  clearTimeout(searchTimer);
+  $('searchInput').value = '';
+  searchQuery = '';
+  $('searchClear').hidden = true;
+  if (lastData) { boardSignature = ''; renderBoard(lastData); }
+};
+window.addEventListener('keydown', e => {
+  if (e.key === '/' && !['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement?.tagName) && !document.querySelector('dialog[open]')) {
+    e.preventDefault();
+    $('searchInput').focus();
+  }
+});
+
+function matchChallengeFilter(ch) {
+  if (filterCat !== 'all' && ch.category !== filterCat) return false;
+  if (filterStatus === 'running' && !['running', 'launching'].includes(ch.status)) return false;
+  if (filterStatus === 'need_help' && ch.status !== 'need_help') return false;
+  if (filterStatus === 'solved' && !ch.flag && ch.status !== 'solved') return false;
+  if (filterStatus === 'anomaly' && !['exited', 'pane_gone', 'failed', 'ready', 'created', 'stopped'].includes(ch.status)) return false;
+  if (searchQuery) {
+    const hay = [
+      ch.name, ch.category, ch.target, ch.flag, ch.note, ch.info,
+      ...chUnits(ch).map(u => `${u.harness} ${u.directive || ''}`),
+    ].join(' ').toLowerCase();
+    if (!hay.includes(searchQuery)) return false;
+  }
+  return true;
+}
+
+// ---------------- Smart Non-Overlapping Refresh Scheduler ----------------
+function scheduleNextRefresh() {
+  clearTimeout(pollTimer);
+  if (pollIntervalMs <= 0 || document.hidden) return;
+  // 若所有题目均不在运行/启动/下载态，自动放宽轮询间隔至 >=15s，减少空闲资源占用
+  const hasActive = lastData && (lastData.challenges || []).some(c =>
+    ['running', 'launching', 'downloading', 'need_help'].includes(c.status)
+  );
+  const delay = hasActive ? pollIntervalMs : Math.max(pollIntervalMs, 15000);
+  pollTimer = setTimeout(() => refresh(false), delay);
+}
+
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) {
+    clearTimeout(pollTimer);
+  } else if (pollIntervalMs > 0) {
+    refresh(false);
+  }
+});
+
+function forgetChallenge(cid) {
+  activeAttempt.delete(cid);
+}
+
+function mergeDashboard(data) {
+  const previous = lastData;
+  if (!previous || !data.delta || previous.root !== data.root) {
+    if (previous && previous.root !== data.root) {
+      activeAttempt.clear();
+    } else if (previous) {
+      const nextIds = new Set((data.challenges || []).map(ch => ch.id));
+      for (const old of previous.challenges || []) {
+        if (!nextIds.has(old.id)) forgetChallenge(old.id);
+      }
+    }
+    lastData = (previous && previous.root === data.root && data.outputs === undefined)
+      ? { ...data, outputs: previous.outputs }
+      : data;
+    return;
+  }
+  if (data.unchanged) {
+    // elsewhere_running 等轻量顶部状态仍要更新，题目数组保持原引用。
+    lastData = { ...previous, ...data, challenges: previous.challenges };
+    return;
+  }
+  const removed = new Set(data.removed || []);
+  for (const cid of removed) forgetChallenge(cid);
+  const changed = new Map((data.challenges || []).map(ch => [ch.id, ch]));
+  const merged = [];
+  for (const old of previous.challenges || []) {
+    if (removed.has(old.id)) continue;
+    merged.push(changed.get(old.id) || old);
+    changed.delete(old.id);
+  }
+  merged.push(...changed.values());
+  merged.sort((a, b) => (a.created_at || 0) - (b.created_at || 0));
+  lastData = { ...previous, ...data, challenges: merged };
+}
+
+async function refresh(manual = false) {
+  if (isRefreshing) return;
+  isRefreshing = true;
+  clearTimeout(pollTimer);
+  try {
+    const since = lastData && lastData.revision
+      ? `&since=${encodeURIComponent(lastData.revision)}` : '';
+    const outputSince = lastData ? (lastData.output_revision || 0) : 0;
+    const data = await api('/challenges?view=dashboard' + since +
+      `&output_since=${outputSince}`);
+    mergeDashboard(data);
+    if (!data.unchanged) dataVersion++;
+    renderBoard(lastData);
+    if (manual) toast('面板已同步最新状态', 'ok', 1600);
+  } catch (e) {
+    if (manual) toast('刷新失败: ' + e.message, 'err');
+  } finally {
+    isRefreshing = false;
+    scheduleNextRefresh();
   }
 }
 
-function restoreOutputScroll(board) {
-  for (const pre of board.querySelectorAll('pre.output[data-challenge-id]')) {
-    const saved = outputScroll.get(pre.dataset.challengeId);
-    const bottom = Math.max(0, pre.scrollHeight - pre.clientHeight);
-    pre.scrollTop = !saved || saved.atBottom ? bottom : Math.min(saved.top, bottom);
+function updateMetricsAndCategories(allChallenges) {
+  const total = allChallenges.length;
+  const running = allChallenges.filter(c => ['running', 'launching'].includes(c.status)).length;
+  const help = allChallenges.filter(c => c.status === 'need_help').length;
+  const solved = allChallenges.filter(c => c.flag || c.status === 'solved').length;
+  const idle = allChallenges.filter(c => ['exited', 'pane_gone', 'failed', 'ready', 'created', 'stopped'].includes(c.status)).length;
+
+  $('mTotal').textContent = total;
+  $('mRunning').textContent = running;
+  $('mHelp').textContent = help;
+  const solvedHtml = `${solved} <small>/ ${total}</small>`;
+  if ($('mSolved').innerHTML !== solvedHtml) $('mSolved').innerHTML = solvedHtml;
+  $('mIdle').textContent = idle;
+
+  const catCounts = {};
+  for (const c of allChallenges) catCounts[c.category] = (catCounts[c.category] || 0) + 1;
+  const cats = ['all', ...CAT_ORDER.filter(c => catCounts[c]), ...Object.keys(catCounts).filter(c => !CAT_ORDER.includes(c))];
+  if (filterCat !== 'all' && !catCounts[filterCat]) filterCat = 'all';
+
+  const nextCatSig = JSON.stringify({ cats, catCounts, filterCat, total });
+  if (nextCatSig === catBarSignature) return;
+  catBarSignature = nextCatSig;
+
+  const bar = $('catFilterBar');
+  bar.innerHTML = '';
+  for (const c of cats) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'seg-btn' + (filterCat === c ? ' active' : '');
+    const cnt = c === 'all' ? total : (catCounts[c] || 0);
+    b.innerHTML = `${c === 'all' ? '全部类型' : c.toUpperCase()}<span class="cnt-pill">${cnt}</span>`;
+    b.onclick = () => {
+      filterCat = c;
+      if (lastData) { boardSignature = ''; renderBoard(lastData); }
+    };
+    bar.appendChild(b);
   }
 }
 
-async function refresh() {
-  let data;
-  try { data = await api('/challenges'); }
-  catch (e) { return; }
+function vulnCountOf(ch) {
+  return ch.vuln_count ?? (ch.vuln_points || []).length;
+}
+
+// 计算单张卡片的结构签名；未变化时只更新黑板计数，不重建 DOM。
+function cardMetaSignature(ch, unit) {
+  const units = chUnits(ch);
+  return JSON.stringify({
+    name: ch.name,
+    category: ch.category,
+    status: ch.status,
+    target: ch.target,
+    workdir: ch.workdir,
+    download_status: ch.download_status,
+    has_urls: !!(ch.attachment_urls && ch.attachment_urls.length),
+    flag: ch.flag,
+    flag_attempt: ch.flag_attempt,
+    awdp: ch.awdp,
+    auto_defense: ch.auto_defense,
+    contest: ch.contest,
+    competition_mode: lastData.competition_mode,
+    deliverables: ch.deliverables,
+    vuln_len: vulnCountOf(ch),
+    has_board: units.length > 1 || ch.awdp || ch.board_entries > 0,
+    note: unit.note || ch.note,
+    active_aid: unit.id,
+    unit_status: unit.status,
+    unit_idle: !!unit.idle_at_prompt,
+    unit_pane: unit.tmux && unit.tmux.pane,
+    units_meta: units.map(u => [u.id, u.harness, u.role, u.status, u.port_base, u.directive, u.spin_suspected, !!u.idle_at_prompt]),
+  });
+}
+
+function boardInfoText(ch) {
+  const vulnCount = vulnCountOf(ch);
+  return `📋 黑板 ${ch.board_entries || 0}` +
+    (vulnCount ? ` · 🕳 ${vulnCount}` : '') +
+    (ch.board_updated ? ` · ${fmtAgo(ch.board_updated)}` : '');
+}
+
+function previewKey(ch, unit) {
+  return (unit.tmux && unit.tmux.ubz_id) || unit.workdir || ch.workdir;
+}
+
+function previewText(ch, unit) {
+  const text = (lastData.outputs || {})[previewKey(ch, unit)];
+  return text || '（等待终端输出；完整会话请在 tmux 中查看）';
+}
+
+function updatePreview(pre, nextText) {
+  if (!pre || pre.textContent === nextText) return;
+  const sel = window.getSelection?.();
+  if (sel && !sel.isCollapsed && sel.rangeCount &&
+      (pre.contains(sel.anchorNode) || pre.contains(sel.focusNode))) return;
+  const bottom = Math.max(0, pre.scrollHeight - pre.clientHeight);
+  const atBottom = bottom - pre.scrollTop <= 10;
+  const oldTop = pre.scrollTop;
+  pre.textContent = nextText;
+  const nextBottom = Math.max(0, pre.scrollHeight - pre.clientHeight);
+  pre.scrollTop = atBottom ? nextBottom : Math.min(oldTop, nextBottom);
+}
+
+function patchTileInPlace(existingTile, ch) {
+  const unit = activeUnitOf(ch);
+  const nextMetaSig = cardMetaSignature(ch, unit);
+  if (existingTile.dataset.metaSig !== nextMetaSig) {
+    const nextTile = renderTile(ch);
+    existingTile.replaceWith(nextTile);
+    const pre = nextTile.querySelector('pre.output-preview');
+    if (pre) pre.scrollTop = pre.scrollHeight;
+    return;
+  }
+  existingTile._ch = ch;
+  existingTile._unit = unit;
+  const bi = existingTile.querySelector('.board-info');
+  if (bi) {
+    const vulnCount = vulnCountOf(ch);
+    bi.className = 'board-info' + (ch.board_entries > 0 || vulnCount > 0 ? ' hot' : '');
+    const nextBiText = boardInfoText(ch);
+    if (bi.textContent !== nextBiText) bi.textContent = nextBiText;
+  }
+  updatePreview(existingTile.querySelector('pre.output-preview'), previewText(ch, unit));
+}
+
+function renderBoard(data) {
   const root = data.root;
-  $('rootChip').textContent = root ? ('📁 ' + root + '  (tmux: ' + data.tmux_session + ')') : '⚠ 点击设置赛事根目录';
-  $('elsewhere').textContent = data.elsewhere_running ? `其他赛事还有 ${data.elsewhere_running} 题在跑` : '';
-  $('emptyHint').hidden = !root || data.challenges.length > 0;
+  const apiMode = data.competition_mode === 'api_auto';
+  $('btnContest').hidden = !apiMode;
+  if (!apiMode && dlgContest.open) dlgContest.close();
+  const chip = $('rootChip');
+  const modeText = apiMode ? ' · API全自动' : ' · 传统CTF';
+  const nextChipText = root ? ('📁 ' + root + modeText + '  (tmux: ' + data.tmux_session + ')') : '⚠ 点击设置赛事根目录';
+  if (chip.textContent !== nextChipText) chip.textContent = nextChipText;
+  chip.classList.toggle('unset', !root);
+  const nextElsewhere = data.elsewhere_running ? `⚡ 其他赛事还有 ${data.elsewhere_running} 题在跑` : '';
+  if ($('elsewhere').textContent !== nextElsewhere) $('elsewhere').textContent = nextElsewhere;
 
-  // 没有数据变化时不重建卡片，避免终端阅读位置和文本选择被刷新打断。
-  const nextSignature = JSON.stringify({ root, challenges: data.challenges });
+  const allChallenges = data.challenges || [];
+  $('deckSubhead').hidden = !root || allChallenges.length === 0;
+  $('emptyHint').hidden = !root || allChallenges.length > 0;
+
+  // 数据版本由服务端增量响应驱动；不要把所有终端输出反复 JSON.stringify。
+  const nextSignature = JSON.stringify({
+    root, dataVersion, filterStatus, filterCat, searchQuery,
+    active: [...activeAttempt.entries()],
+  });
   if (nextSignature === boardSignature) return;
+  boardSignature = nextSignature;
+
+  updateMetricsAndCategories(allChallenges);
+  const filtered = allChallenges.filter(matchChallengeFilter);
+  const nextSummary = filtered.length < allChallenges.length
+    ? `显示 ${filtered.length} / ${allChallenges.length} 题`
+    : `共 ${allChallenges.length} 题`;
+  if ($('filterSummary').textContent !== nextSummary) $('filterSummary').textContent = nextSummary;
 
   const groups = {};
-  for (const ch of data.challenges) (groups[ch.category] ??= []).push(ch);
+  for (const ch of filtered) (groups[ch.category] ??= []).push(ch);
   const cats = [...CAT_ORDER, ...Object.keys(groups).filter(c => !CAT_ORDER.includes(c))]
     .filter(c => groups[c] && groups[c].length);
 
   const board = $('board');
-  rememberOutputScroll(board);
-  boardSignature = nextSignature;
+  const nextLayoutSig = JSON.stringify(cats.map(cat => [cat, groups[cat].map(c => c.id)]));
+
+  // 若分类与题目 ID 列表未变化，直接原位增量更新各张卡片，避免整页重排闪动
+  if (nextLayoutSig === layoutSignature && cats.length > 0) {
+    const chMap = new Map(filtered.map(c => [c.id, c]));
+    for (const cat of cats) {
+      const list = groups[cat];
+      const running = list.filter(c => ['running', 'need_help', 'launching'].includes(c.status)).length;
+      const solved = list.filter(c => c.flag || c.status === 'solved').length;
+      const cntEl = board.querySelector(`.cat-sec[data-cat="${cat}"] .cat-head .cnt`);
+      const nextCnt = `${list.length} 题 · ${running} 在跑 · ${solved} 已解`;
+      if (cntEl && cntEl.textContent !== nextCnt) cntEl.textContent = nextCnt;
+    }
+    for (const tile of board.querySelectorAll('.tile[data-cid]')) {
+      const ch = chMap.get(tile.dataset.cid);
+      if (ch) patchTileInPlace(tile, ch);
+    }
+    return;
+  }
+
+  layoutSignature = nextLayoutSig;
   board.innerHTML = '';
+
+  if (allChallenges.length > 0 && filtered.length === 0) {
+    const noRes = document.createElement('div');
+    noRes.className = 'empty-hint';
+    noRes.innerHTML = `<div class="empty-title">没有匹配的题目</div><div>尝试切换上方状态筛选或清空搜索关键词</div>`;
+    board.appendChild(noRes);
+    return;
+  }
+
   for (const cat of cats) {
     const list = groups[cat];
-    const running = list.filter(c => ['running', 'need_help'].includes(c.status)).length;
-    const solved = list.filter(c => c.flag).length;
+    const running = list.filter(c => ['running', 'need_help', 'launching'].includes(c.status)).length;
+    const solved = list.filter(c => c.flag || c.status === 'solved').length;
     const sec = document.createElement('div');
     sec.className = 'cat-sec';
+    sec.dataset.cat = cat;
     sec.style.setProperty('--cat-color', CAT_COLOR[cat] || 'var(--fg)');
     const head = document.createElement('div');
     head.className = 'cat-head';
-    head.innerHTML = `<span></span><span class="cnt">${list.length} 题 · ${running} 在跑 · ${solved} 有 flag</span>`;
-    head.querySelector('span').textContent = cat.toUpperCase();
+    head.innerHTML = `<i class="cat-dot"></i><span class="cat-title"></span><span class="cnt">${list.length} 题 · ${running} 在跑 · ${solved} 已解</span>`;
+    head.querySelector('.cat-title').textContent = cat.toUpperCase();
     sec.appendChild(head);
     const tiles = document.createElement('div');
     tiles.className = 'tiles';
@@ -362,167 +1432,459 @@ async function refresh() {
     sec.appendChild(tiles);
     board.appendChild(sec);
   }
-  restoreOutputScroll(board);
+  for (const pre of board.querySelectorAll('pre.output-preview')) {
+    pre.scrollTop = pre.scrollHeight;
+  }
 }
 
-// 小方块直接显示全部信息: 不折叠、不缩略、按钮在块上
+// 多开题的运行单元: attempts; 旧版单路题包成和 attempt 同形的伪单元
+function chUnits(ch) {
+  if (ch.attempts && ch.attempts.length) return ch.attempts;
+  return [{ id: '', harness: ch.harness, status: ch.status, tmux: ch.tmux || {} }];
+}
+
+function activeUnitOf(ch) {
+  const units = chUnits(ch);
+  const aid = activeAttempt.get(ch.id);
+  return units.find(u => u.id === aid) || units[0];
+}
+
+function fmtAgo(ts) {
+  if (!ts) return '';
+  const s = Math.max(0, (Date.now() / 1000) - ts);
+  if (s < 60) return '刚刚';
+  if (s < 3600) return Math.floor(s / 60) + 'm 前';
+  if (s < 86400) return Math.floor(s / 3600) + 'h 前';
+  return Math.floor(s / 86400) + 'd 前';
+}
+
+function statusGlyphHtml(status, allIdleAtPrompt = false) {
+  if (status === 'running' && allIdleAtPrompt) {
+    return `<span class="t-glyph" title="TUI 进程在线，当前已停在空闲输入框待命">⏸</span>`;
+  }
+  if (['running', 'launching', 'downloading'].includes(status)) {
+    return `<span class="t-glyph"><span class="spinner"></span></span>`;
+  }
+  if (status === 'solved') return `<span class="t-glyph solved">✓</span>`;
+  if (status === 'need_help') return `<span class="t-glyph need_help">!</span>`;
+  if (['exited', 'failed', 'pane_gone'].includes(status)) return `<span class="t-glyph bad">×</span>`;
+  return `<span class="t-glyph">○</span>`;
+}
+
+// 轻量题目卡片：状态、配置与基本 tmux 控制，不内嵌会话。
 function renderTile(ch) {
+  const units = chUnits(ch);
+  const unit = activeUnitOf(ch);
+  const multi = units.length > 1;
+  const runningUnits = units.filter(u => u.status === 'running');
+  const allRunningIdle = ch.status === 'running' && runningUnits.length > 0 && runningUnits.every(u => u.idle_at_prompt);
   const tile = document.createElement('div');
   tile.className = 'tile ' + ch.status;
+  tile.dataset.cid = ch.id;
+  tile.dataset.metaSig = cardMetaSignature(ch, unit);
+  tile._ch = ch;
+  tile._unit = unit;
 
+  // 1. Header Row
   const head = document.createElement('div');
   head.className = 't-head';
-  head.innerHTML = `<span class="t-name"></span><span class="badge">${ch.harness}</span><span class="status ${ch.status}">${STATUS_LABEL[ch.status] || ch.status}</span>`;
-  head.querySelector('.t-name').textContent = ch.name;
-  const bound = !!(ch.contest && ch.contest.question_id);
+  const engCol = engineColor(unit.harness);
+  const headStatusCls = allRunningIdle ? 'idle_prompt' : ch.status;
+  const headStatusText = allRunningIdle ? '⏸ 待命' : (STATUS_LABEL[ch.status] || ch.status);
+  head.innerHTML = `
+    ${statusGlyphHtml(ch.status, allRunningIdle)}
+    <span class="t-name"></span>
+    <span class="badge engine" style="--wc:${engCol}">${unit.harness}${unit.role === 'defense' ? '·防' : ''}</span>
+    <span class="status ${headStatusCls}" title="${allRunningIdle ? '所有运行中的路均已结束当前回合，停在输入框待命' : (multi ? '整组聚合状态；各路状态见下方标签圆点' : '')}">${headStatusText}</span>
+  `;
+  const nameEl = head.querySelector('.t-name');
+  nameEl.textContent = ch.name;
+  nameEl.title = ch.name;
+
+  const bound = lastData.competition_mode === 'api_auto' && !!(ch.contest && ch.contest.question_id);
   if (bound) {
     const b = document.createElement('span');
-    b.className = 'badge';
-    b.textContent = '🏆';
-    b.title = `平台题: ${ch.contest.adapter_name || ch.contest.adapter} · question_id=${ch.contest.question_id}`;
+    b.className = 'badge contest';
+    b.textContent = '🏆 平台';
+    b.title = `平台题: ${ch.contest.adapter_name || ch.contest.adapter} · ID=${ch.contest.question_id}`;
+    head.insertBefore(b, head.querySelector('.status'));
+  }
+  if (ch.awdp) {
+    const b = document.createElement('span');
+    b.className = 'badge awdp';
+    b.textContent = '⚔ AWDP';
+    b.title = 'AWDP 攻防模式：攻击路正常解题；已验证漏洞点写板后自动开防御路接力修补';
     head.insertBefore(b, head.querySelector('.status'));
   }
   if (!ch.target && ['web', 'pwn'].includes(ch.category)) {
     const b = document.createElement('span');
-    b.className = 'badge';
-    b.style.cssText = 'color:var(--orange);border-color:var(--orange)';
+    b.className = 'badge warn';
     b.textContent = '待靶机';
     head.insertBefore(b, head.querySelector('.status'));
   }
   tile.appendChild(head);
 
+  // 2. Multi-attempt Worker Lanes Switcher
+  if (multi) {
+    const tabs = document.createElement('div');
+    tabs.className = 't-tabs';
+    for (const u of units) {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 't-tab' + (u === unit ? ' active' : '');
+      b.style.setProperty('--wc', engineColor(u.harness));
+      const isIdlePrompt = u.status === 'running' && !!u.idle_at_prompt;
+      b.title = `${u.id} · ${u.role === 'defense' ? '防御路 · ' : ''}${isIdlePrompt ? '运行中（⏸ 已停在输入框待命）' : (STATUS_LABEL[u.status] || u.status)}` +
+        (u.port_base ? ` · 端口段 ${u.port_base}-${u.port_base + 999}` : '') +
+        (u.directive ? `\n附加指令: ${u.directive}` : '') +
+        (u.workdir ? `\n路径: ${u.workdir}` : '') +
+        (u.spin_suspected ? '\n🌀 疑似空转：本地已交付但仍在忙碌烧 token，考虑停掉该路' : '');
+      const dot = document.createElement('span');
+      dot.className = 't-dot ' + (isIdlePrompt ? 'idle_prompt' : u.status);
+      const label = document.createElement('span');
+      label.textContent = u.harness + (u.role === 'defense' ? '·防' : '') + (isIdlePrompt ? ' ⏸' : '') + (u.spin_suspected ? ' 🌀' : '');
+      b.append(dot, label);
+      if (u.port_base) {
+        const pt = document.createElement('span');
+        pt.className = 'port-tag';
+        pt.textContent = `:${u.port_base}`;
+        b.appendChild(pt);
+      }
+      b.onclick = () => {
+        activeAttempt.set(ch.id, u.id);
+        if (lastData) { boardSignature = ''; renderBoard(lastData); }
+      };
+      tabs.appendChild(b);
+    }
+    tile.appendChild(tabs);
+  }
+
+  // 3. Signals Strip: Target + Blackboard
+  const sigRow = document.createElement('div');
+  sigRow.className = 't-signals';
+
   const t = document.createElement('div');
-  t.className = 'target';
-  t.title = '点击补充/修改靶机';
-  t.textContent = (ch.target ? '🎯 ' + ch.target : '🎯 未设置靶机（点击补充）') +
-    (ch.download_status && ch.attachment_urls.length ? `  📦 ${ch.download_status}` : '');
+  t.className = 'target' + (ch.target ? '' : ' empty');
+  t.title = '点击补充/修改靶机地址（仅保存配置）';
+  t.textContent = (ch.target ? '🎯 ' + ch.target : '🎯 未设靶机（点击补充）') +
+    (ch.download_status && ch.attachment_urls.length ? ` · 📦 ${ch.download_status}` : '');
   t.onclick = () => openTarget(ch);
   t.tabIndex = 0;
   t.setAttribute('role', 'button');
   t.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openTarget(ch); } };
-  tile.appendChild(t);
+  sigRow.appendChild(t);
 
+  if (multi || ch.awdp || ch.board_entries > 0) {
+    const bi = document.createElement('div');
+    const vulnCount = vulnCountOf(ch);
+    bi.className = 'board-info' + (ch.board_entries > 0 || vulnCount > 0 ? ' hot' : '');
+    bi.textContent = boardInfoText(ch);
+    bi.title = 'board.md：各路共享的事实/漏洞点/死路/占用声明（点击查看）' +
+      (ch.awdp && ch.auto_defense ? '\n漏洞点接力已开启' : '');
+    bi.onclick = () => openBoard(tile._ch);
+    sigRow.appendChild(bi);
+  }
+  tile.appendChild(sigRow);
+
+  const workdir = document.createElement('div');
+  workdir.className = 'workdir';
+  workdir.textContent = '⌂ ' + ch.workdir;
+  workdir.title = `题目绝对路径：${ch.workdir}\n点击复制`;
+  workdir.onclick = () => {
+    navigator.clipboard.writeText(ch.workdir);
+    toast('已复制题目绝对路径');
+  };
+  tile.appendChild(workdir);
+
+  // 4. Flag / Deliverables / Note
   if (ch.flag) {
     const f = document.createElement('div');
     f.className = 'flag real';
-    f.textContent = ch.flag;
-    f.title = '点击复制';
-    f.onclick = () => { navigator.clipboard.writeText(ch.flag); f.textContent = '✓ 已复制'; setTimeout(() => f.textContent = ch.flag, 800); };
+    const flagText = document.createElement('span');
+    flagText.style.cssText = 'overflow:hidden;text-overflow:ellipsis;flex:1';
+    flagText.textContent = '⚑ ' + ch.flag;
+    f.appendChild(flagText);
+    const src = ch.flag_attempt && units.find(u => u.id === ch.flag_attempt);
+    if (src) {
+      const tag = document.createElement('span');
+      tag.style.cssText = 'color:var(--muted);font-size:9.5px;flex:none';
+      tag.textContent = `via ${src.harness}`;
+      f.appendChild(tag);
+    }
+    f.title = '点击复制 Flag' + (src ? `（来自 ${src.harness} ${src.id}）` : '');
+    f.onclick = () => {
+      navigator.clipboard.writeText(ch.flag);
+      toast('已复制 Flag 到剪贴板');
+      flagText.textContent = '✓ 已复制';
+      setTimeout(() => flagText.textContent = '⚑ ' + ch.flag, 800);
+    };
     f.tabIndex = 0;
     f.setAttribute('role', 'button');
     f.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); f.click(); } };
     tile.appendChild(f);
   }
 
-  if (ch.note) {
+  for (const dlv of (ch.deliverables || [])) {
+    const d = document.createElement('div');
+    d.className = 'deliverable';
+    const abs = dlv.path.startsWith('/') ? dlv.path : ch.workdir + '/' + dlv.path;
+    d.textContent = `📦 修补包 ${dlv.path}`;
+    d.title = `${dlv.note}\n点击复制绝对路径: ${abs}`;
+    d.onclick = () => {
+      navigator.clipboard.writeText(abs);
+      toast(`已复制修补包路径: ${abs}`);
+      d.textContent = '✓ 已复制路径';
+      setTimeout(() => d.textContent = `📦 修补包 ${dlv.path}`, 800);
+    };
+    tile.appendChild(d);
+  }
+
+  if (ch.note || unit.note) {
     const n = document.createElement('div');
     n.className = 'note';
-    n.textContent = '⚠ ' + ch.note;
+    n.textContent = '⚠ ' + (unit.note || ch.note);
     tile.appendChild(n);
   }
 
-  const pre = document.createElement('pre');
-  pre.className = 'output';
-  pre.tabIndex = 0;
-  pre.dataset.challengeId = ch.id;
-  pre.setAttribute('aria-label', `${ch.name} 最近输出`);
-  pre.title = '停在底部时跟随最新输出；向上滚动后保持当前阅读位置';
-  pre.textContent = ch.last_output || '（暂无输出）';
-  pre.onscroll = () => {
-    const bottom = Math.max(0, pre.scrollHeight - pre.clientHeight);
-    outputScroll.set(ch.id, {
-      top: pre.scrollTop,
-      atBottom: bottom - pre.scrollTop <= 10,
-    });
-  };
-  tile.appendChild(pre);
+  const preview = document.createElement('pre');
+  preview.className = 'output-preview';
+  preview.tabIndex = 0;
+  preview.setAttribute('aria-label', `${ch.name} ${unit.harness} 最近输出（只读）`);
+  preview.title = '只读状态预览；完整会话与人工操作请使用下方「终端」';
+  preview.textContent = previewText(ch, unit);
+  tile.appendChild(preview);
 
+  // 5. Basic Session Controls（对话与输出查看均在 tmux 中完成）
   const act = document.createElement('div');
   act.className = 'actions';
   const mk = (label, fn, cls = '', title = '', enabled = true) => {
     const b = document.createElement('button');
+    b.type = 'button';
     b.textContent = label; b.className = cls; b.title = title; b.disabled = !enabled;
     b.onclick = () => fn(ch);
     act.appendChild(b);
   };
-  const hasPane = !!(ch.tmux && ch.tmux.pane);
-  const resumable = ['exited', 'pane_gone'].includes(ch.status);
-  mk('↻ 恢复', c => act_resume(c), 'primary', '恢复会话并自动续跑（goal 弹窗自动确认）', resumable);
-  mk('⌨ 终端', c => act_focus(c), '', '接管该题 pane（优先复用已打开的终端）', hasPane);
-  mk('⚑ flag', c => {
-    flagTarget = c;
-    $('fFlag').value = c.flag || '';
-    $('fFlagErr').textContent = '';
-    const boundCh = !!(c.contest && c.contest.question_id);
-    $('btnSubmitFlag').hidden = !boundCh;
-    $('fFlagHint').hidden = !boundCh;
-    dlgFlag.showModal();
-  });
+  const hasPane = !!(unit.tmux && unit.tmux.pane);
+  const focusable = hasPane && !['pane_gone', 'stopped'].includes(unit.status);
+  const canLaunch = !hasPane && ['ready', 'created', 'stopped', 'failed'].includes(unit.status);
+  const resumable = ['exited', 'pane_gone', 'stopped', 'failed'].includes(unit.status) && !canLaunch;
+  const isRunning = ['running', 'need_help', 'launching'].includes(unit.status);
+
+  if (canLaunch) {
+    mk('▶ 启动', c => act_launch(c), 'primary', '分配 tmux pane 并启动 Harness 注入提示词', true);
+  } else if (resumable) {
+    mk('↻ 恢复', c => act_resume(c, unit), 'primary', '恢复该路会话并自动续跑', true);
+  } else if (isRunning) {
+    mk('⏹ 停止', c => act_stop(c, unit), '', '停止当前选中的这一路 pane', true);
+  } else {
+    mk('↻ 恢复', c => act_resume(c, unit), '', '恢复该路会话', false);
+  }
+
+  mk('⌨ 终端', c => act_focus(c, unit), '', '接管该路 pane（优先复用已打开的终端）', focusable);
+  mk('⚑ Flag', c => openFlagDialog(c), ch.flag ? 'success' : '', '登记 / 修改 / 提交 Flag');
   if (bound && ch.contest.interactive) {
     mk('🔄 重置', c => act_reset_env(c), '', '调用平台接口重置该题容器环境');
   }
+  mk('＋ 加开', c => openAddAttempt(c), '', '再加一路 harness 并行解题（独立目录和端口段，共享黑板）');
+  if (multi && unit.id) {
+    mk('✕ 删路', c => act_drop_attempt(c, unit), 'danger', '删除当前选中的这一路（杀 pane，工作目录保留）', true);
+  }
   mk('📎 附件', c => { uploadTarget = c; $('fUpload').click(); }, '', '上传本地文件到该题 attachments/（压缩包自动解压）');
-  mk('✕ 删除', c => { delTarget = c; $('delInfo').textContent = c.name + '  (' + c.workdir + ')'; dlgDel.showModal(); }, 'danger');
+  mk('✕', c => { delTarget = c; $('delInfo').textContent = c.name + '  (' + c.workdir + ')'; dlgDel.showModal(); }, 'danger icon-only', '删除题目');
+
   tile.appendChild(act);
   return tile;
 }
 
-async function act_resume(ch) { try { await api(`/challenges/${ch.id}/resume`, 'POST'); } catch (e) { alert(e.message); } refresh(); }
-async function act_focus(ch) { try { await api(`/challenges/${ch.id}/focus`, 'POST'); } catch (e) { alert(e.message); } }
+function openFlagDialog(c) {
+  flagTarget = c;
+  $('fFlag').value = c.flag || '';
+  $('fFlagErr').textContent = '';
+  const asel = $('fFlagAttempt');
+  asel.innerHTML = '<option value="">（未指明）</option>';
+  for (const u of chUnits(c)) {
+    if (!u.id) continue;
+    const o = document.createElement('option');
+    o.value = u.id;
+    o.textContent = `${u.harness} (${u.id})`;
+    asel.appendChild(o);
+  }
+  asel.value = c.flag_attempt || '';
+  $('fFlagStopOthers').checked = false;
+  const boundCh = lastData.competition_mode === 'api_auto' && !!(c.contest && c.contest.question_id);
+  $('btnSubmitFlag').hidden = !boundCh;
+  $('fFlagHint').hidden = !boundCh;
+  dlgFlag.showModal();
+}
+
+// ---------------- Card Actions ----------------
+async function act_launch(ch) {
+  try {
+    toast(`正在启动「${ch.name}」……`);
+    await api(`/challenges/${ch.id}/launch`, 'POST');
+    toast(`「${ch.name}」已启动`);
+  } catch (e) { toast(e.message, 'err', 5000); }
+  refresh();
+}
+async function act_resume(ch, unit) {
+  try {
+    toast(`正在恢复「${ch.name}」(${unit.harness})……`);
+    await api(`/challenges/${ch.id}/resume?aid=${unit.id}`, 'POST');
+    toast(`「${ch.name}」已恢复运行`);
+  } catch (e) { toast(e.message, 'err', 5000); }
+  refresh();
+}
+async function act_stop(ch, unit) {
+  const label = unit.id ? `${unit.harness} (${unit.id})` : ch.name;
+  if (!confirm(`确认停止「${ch.name}」的 ${label}？`)) return;
+  try {
+    await api(`/challenges/${ch.id}/stop${unit.id ? `?aid=${unit.id}` : ''}`, 'POST');
+    toast(`已停止 ${label}`, 'warn');
+  } catch (e) { toast(e.message, 'err', 5000); }
+  refresh();
+}
+async function act_focus(ch, unit) {
+  try {
+    const r = await api(`/challenges/${ch.id}/focus?aid=${unit.id}`, 'POST');
+    if (r.message) toast(`已唤起终端 (${r.message})`);
+  } catch (e) { toast(e.message, 'err', 5000); }
+}
+async function act_drop_attempt(ch, unit) {
+  const roleTag = unit.role === 'defense' ? '（防御路）' : '';
+  if (!confirm(`删除「${ch.name}」的 ${unit.harness}${roleTag} ${unit.id} 这一路？\npane 会被杀掉，工作目录保留在磁盘。删除后可重新「＋加开」。`)) return;
+  try {
+    await api(`/challenges/${ch.id}/attempts/${unit.id}`, 'DELETE');
+    activeAttempt.delete(ch.id);
+    toast(`已移除 ${unit.harness} (${unit.id})`, 'warn');
+  } catch (e) { toast(e.message, 'err', 5000); }
+  refresh();
+}
 async function act_reset_env(ch) {
   if (!confirm(`确认重置「${ch.name}」的容器环境？平台上的运行实例会被重建，正在进行的连接会断开。`)) return;
   try {
     const r = await api(`/contests/${ch.contest.adapter}/questions/${ch.contest.question_id}/reset`, 'POST');
-    alert((r.ok ? '✅ 重置成功' : '❌ 重置失败') + (r.message ? '：' + r.message : ''));
-  } catch (e) { alert('重置失败: ' + e.message); }
+    const tone = !r.ok ? 'err' : (r.ready === false ? 'warn' : 'ok');
+    const label = !r.ok ? '❌ 环境操作失败' : (r.ready === false ? '⏳ 环境已启动，等待就绪' : '✅ 环境已就绪');
+    toast(label + (r.message ? '：' + r.message : '') +
+      (r.target ? `；靶机 ${r.target}` : ''), tone);
+  } catch (e) { toast('重置失败: ' + e.message, 'err', 5000); }
+  refresh();
 }
 
 // ---------------- 新建题目 ----------------
 $('btnNew').onclick = async () => {
   if (!cfg) cfg = await api('/config');
-  templates = await api('/templates');
+  const tplResp = await api('/templates');
+  templates = tplResp.attack;
+  defenseTemplates = tplResp.defense || {};
+  const savedCat = localStorage.getItem('ubz.lastCat');
+  if (!curCat && savedCat && cfg.categories.includes(savedCat)) curCat = savedCat;
   const cats = $('fCats');
   cats.innerHTML = '';
   for (const c of cfg.categories) {
     const b = document.createElement('button');
+    b.type = 'button';
     b.textContent = c;
-    b.onclick = () => { curCat = c; [...cats.children].forEach(x => x.classList.remove('active')); b.classList.add('active'); showTpl(); };
+    b.onclick = () => { curCat = c; localStorage.setItem('ubz.lastCat', c); [...cats.children].forEach(x => x.classList.remove('active')); b.classList.add('active'); showTpl(); };
     cats.appendChild(b);
-    if (!curCat) { curCat = c; b.classList.add('active'); }
+    if (!curCat) curCat = c;
+    if (curCat === c) b.classList.add('active');
   }
   showTpl();
-  const sel = $('fHarness');
-  sel.innerHTML = '';
+  let savedHarnesses = [];
+  try {
+    savedHarnesses = JSON.parse(localStorage.getItem('ubz.lastHarnesses') || '[]')
+      .filter(h => cfg.harnesses.includes(h));
+  } catch (_) {}
+  const activeSet = new Set(savedHarnesses.length ? savedHarnesses : [cfg.default_harness]);
+  const box = $('fHarnesses');
+  box.innerHTML = '';
   for (const h of cfg.harnesses) {
-    const o = document.createElement('option');
-    o.value = o.textContent = h;
-    if (h === cfg.default_harness) o.selected = true;
-    sel.appendChild(o);
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.textContent = h;
+    b.dataset.harness = h;
+    if (activeSet.has(h)) b.classList.add('active');
+    b.onclick = () => {
+      b.classList.toggle('active');
+      const cur = selectedHarnesses();
+      if (cur.length) localStorage.setItem('ubz.lastHarnesses', JSON.stringify(cur));
+    };
+    box.appendChild(b);
+  }
+  const savedDef = localStorage.getItem('ubz.lastDefenseHarness');
+  const defDefault = (savedDef && cfg.harnesses.includes(savedDef))
+    ? savedDef : (cfg.defense_harness || cfg.default_harness);
+  const dbox = $('fDefenseHarnesses');
+  dbox.innerHTML = '';
+  for (const h of cfg.harnesses) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.textContent = h;
+    b.dataset.harness = h;
+    if (h === defDefault) b.classList.add('active');
+    b.onclick = () => {
+      for (const x of dbox.querySelectorAll('button.active')) x.classList.remove('active');
+      b.classList.add('active');
+      localStorage.setItem('ubz.lastDefenseHarness', h);
+    };
+    dbox.appendChild(b);
   }
   $('fErr').textContent = '';
   dlgNew.showModal();
+  $('fName').focus();
 };
+
+function selectedHarnesses() {
+  return [...$('fHarnesses').querySelectorAll('button.active')].map(b => b.dataset.harness);
+}
+
+function selectedDefense() {
+  if ($('fDefenseBlock').hidden) return '';
+  const b = $('fDefenseHarnesses').querySelector('button.active');
+  return b ? b.dataset.harness : '';
+}
 
 function showTpl() {
   const isCustom = curCat === 'custom';
   $('fCustomPrompt').hidden = !isCustom;
   $('fTplPreview').textContent = isCustom ? '' : (templates[curCat] || '(模板文件缺失: prompts/' + curCat + '.md)');
+  const canAwdp = !!defenseTemplates[curCat];
+  $('fAwdpWrap').hidden = !canAwdp;
+  if (!canAwdp) $('fAwdp').checked = false;
+  syncAwdp();
 }
+
+function syncAwdp() {
+  const on = $('fAwdp').checked && !$('fAwdpWrap').hidden;
+  $('fDefenseBlock').hidden = !on;
+  if (on) $('fDefensePrompt').value = defenseTemplates[curCat] || '';
+}
+$('fAwdp').onchange = syncAwdp;
 
 $('btnCreate').onclick = async () => {
   const files = $('fFiles').files;
   const autoLaunch = $('fAutoLaunch').checked;
+  const harnesses = selectedHarnesses();
   const body = {
     name: $('fName').value.trim(),
     category: curCat,
     info: $('fInfo').value,
     target: $('fTarget').value.trim(),
     attachment_urls: $('fUrls').value.split('\n').map(s => s.trim()).filter(Boolean),
-    harness: $('fHarness').value,
+    harnesses,
+    defense_harness: selectedDefense(),
+    auto_defense: !$('fDefenseBlock').hidden && $('fAutoDefense').checked,
+    defense_rules: $('fDefenseBlock').hidden ? '' : $('fDefenseRules').value.trim(),
+    defense_prompt: $('fDefenseBlock').hidden ? '' :
+      ($('fDefensePrompt').value === (defenseTemplates[curCat] || '') ? '' : $('fDefensePrompt').value),
+    awdp: !$('fAwdpWrap').hidden && $('fAwdp').checked,
     custom_prompt: $('fCustomPrompt').value,
-    auto_launch: autoLaunch && files.length === 0,  // 有本地附件时: 先建→传→再启动
   };
+  const dtpl = $('fDefenseTplFile').files[0];
+  body.auto_launch = autoLaunch && files.length === 0 && !dtpl;
   if (!body.name) { $('fErr').textContent = '名称不能为空'; return; }
+  if (!harnesses.length) { $('fErr').textContent = '至少选一个 harness'; return; }
   try {
     $('btnCreate').disabled = true;
     const ch = await api('/challenges', 'POST', body);
@@ -533,43 +1895,189 @@ $('btnCreate').onclick = async () => {
       const r = await fetch(`/api/challenges/${ch.id}/attachments`, { method: 'POST', body: fd });
       const res = await r.json().catch(() => ({}));
       if (!r.ok) throw new Error(res.detail || '附件上传失败');
-      if (res.errors && res.errors.length) alert('解压警告:\n' + res.errors.join('\n'));
-      if (autoLaunch) {
-        $('fErr').textContent = '启动中……';
-        await api(`/challenges/${ch.id}/launch`, 'POST');
-      }
+      if (res.errors && res.errors.length) toast('解压警告: ' + res.errors.join('; '), 'warn', 6000);
+    }
+    if (dtpl) {
+      $('fErr').textContent = '上传交付模板中……';
+      const fd = new FormData();
+      fd.append('file', dtpl);
+      const r = await fetch(`/api/challenges/${ch.id}/defense-template`, { method: 'POST', body: fd });
+      const res = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(res.detail || '交付模板上传失败');
+    }
+    if ((files.length || dtpl) && autoLaunch) {
+      $('fErr').textContent = '启动中……';
+      await api(`/challenges/${ch.id}/launch`, 'POST');
     }
     dlgNew.close();
+    toast(`已创建题目「${ch.name}」`);
     $('fName').value = $('fInfo').value = $('fTarget').value = $('fUrls').value = '';
-    $('fFiles').value = '';
+    $('fDefenseRules').value = $('fDefensePrompt').value = '';
+    $('fAwdp').checked = false;
+    $('fFiles').value = $('fDefenseTplFile').value = '';
   } catch (e) { $('fErr').textContent = e.message; }
   finally { $('btnCreate').disabled = false; }
   refresh();
 };
 
-// ---------------- 靶机补充 ----------------
-function defaultTargetMsg(t) {
-  return t ? `【环境补充】远程环境已开放：${t}。请继续解题：需要本地验证的先在本地验证稳定，再打远程拿真实 flag；拿到后按最初要求第一时间原样发给我，并写入 flag.txt。` : '';
+// ---------------- 共享黑板 ----------------
+function mdRender(src) {
+  const esc = s => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  const inline = s => esc(s)
+    .replace(/^\[verified\]\s*/i, '<span class="verified-tag">VERIFIED</span>')
+    .replace(/`([^`\n]+)`/g, '<code>$1</code>')
+    .replace(/\*\*([^*\n]+)\*\*/g, '<strong>$1</strong>');
+  const out = [];
+  let inCode = false, codeBuf = [], list = null;
+  const flushList = () => {
+    if (list) { out.push('<ul>' + list.map(i => '<li>' + inline(i) + '</li>').join('') + '</ul>'); list = null; }
+  };
+  const flushCode = () => {
+    if (inCode) { out.push('<pre class="code"><code>' + esc(codeBuf.join('\n')) + '</code></pre>'); codeBuf = []; inCode = false; }
+  };
+  for (const line of src.split('\n')) {
+    if (line.trim().startsWith('```')) {
+      if (inCode) flushCode(); else { flushList(); inCode = true; }
+      continue;
+    }
+    if (inCode) { codeBuf.push(line); continue; }
+    const h = line.match(/^(#{1,4})\s+(.*)/);
+    if (h) { flushList(); out.push(`<div class="md-h md-h${h[1].length}">${inline(h[2])}</div>`); continue; }
+    const li = line.match(/^\s*[-*]\s+(.*)/);
+    if (li) { (list ??= []).push(li[1]); continue; }
+    flushList();
+    if (line.trim()) out.push('<p>' + inline(line) + '</p>');
+  }
+  flushList(); flushCode();
+  return out.join('') || '<p style="color:var(--dim)">（该分区暂无记录）</p>';
 }
+
+function renderBoardFiltered() {
+  if (!rawBoardMarkdown) {
+    $('boardView').innerHTML = '<p style="color:var(--dim)">（该题还没有 board.md）</p>';
+    $('boardSecTabs').innerHTML = '';
+    return;
+  }
+  const sections = [];
+  let curTitle = '概览', curLines = [];
+  for (const line of rawBoardMarkdown.split('\n')) {
+    const m = line.match(/^##\s+([^\n（(]+)/);
+    if (m) {
+      if (curLines.length) sections.push({ key: curTitle, text: curLines.join('\n') });
+      curTitle = m[1].trim();
+      curLines = [line];
+    } else {
+      curLines.push(line);
+    }
+  }
+  if (curLines.length) sections.push({ key: curTitle, text: curLines.join('\n') });
+
+  const tabBar = $('boardSecTabs');
+  tabBar.innerHTML = '';
+  const allTabs = ['all', ...sections.filter(s => s.key !== '概览').map(s => s.key)];
+  for (const k of allTabs) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'seg-btn' + (boardSecFilter === k ? ' active' : '');
+    b.textContent = k === 'all' ? '全部章节' : k;
+    b.onclick = () => { boardSecFilter = k; renderBoardFiltered(); };
+    tabBar.appendChild(b);
+  }
+  const targetMd = boardSecFilter === 'all'
+    ? rawBoardMarkdown
+    : (sections.find(s => s.key === boardSecFilter)?.text || rawBoardMarkdown);
+  $('boardView').innerHTML = mdRender(targetMd);
+}
+
+async function openBoard(c) {
+  boardTarget = c;
+  boardSecFilter = 'all';
+  $('boardErr').textContent = '';
+  $('boardSub').textContent = `· ${c.name}（只读，编辑请在 tmux 中完成）`;
+  $('boardView').textContent = '加载中……';
+  dlgBoard.showModal();
+  await reloadBoard();
+}
+async function reloadBoard() {
+  if (!boardTarget) return;
+  $('boardErr').textContent = '';
+  try {
+    const r = await api(`/challenges/${boardTarget.id}/board`);
+    rawBoardMarkdown = r.exists ? r.content : '';
+    renderBoardFiltered();
+  } catch (e) { $('boardView').textContent = '读取失败: ' + e.message; }
+}
+$('btnBoardReload').onclick = reloadBoard;
+$('btnBoardCopy').onclick = () => {
+  navigator.clipboard.writeText(rawBoardMarkdown || '');
+  toast('已复制黑板 Markdown 原文');
+};
+
+// ---------------- 加开一路 ----------------
+async function openAddAttempt(c) {
+  if (!cfg) cfg = await api('/config');
+  addTarget = c;
+  $('addName').textContent = c.name;
+  const sel = $('fAddHarness');
+  sel.innerHTML = '';
+  const used = new Set(chUnits(c).map(u => u.harness));
+  for (const h of cfg.harnesses) {
+    const o = document.createElement('option');
+    o.value = h;
+    o.textContent = used.has(h) ? `${h}（已有一路）` : h;
+    sel.appendChild(o);
+  }
+  const fresh = cfg.harnesses.find(h => !used.has(h));
+  if (fresh) sel.value = fresh;
+  $('fAddRoleWrap').hidden = !(cfg.defense_categories || []).includes(c.category);
+  $('fAddDefense').checked = false;
+  $('fAddErr').textContent = '';
+  dlgAdd.showModal();
+}
+
+$('btnAddAttempt').onclick = async () => {
+  if (!addTarget) return;
+  try {
+    $('btnAddAttempt').disabled = true;
+    $('fAddErr').textContent = '加开中（慢启动 harness 要等就绪）……';
+    const h = $('fAddHarness').value;
+    if ($('fAddDefense').checked && !addTarget.awdp) {
+      await api(`/challenges/${addTarget.id}`, 'PATCH', { awdp: true });
+    }
+    await api(`/challenges/${addTarget.id}/attempts`, 'POST',
+              { harness: h,
+                directive: $('fAddDirective').value.trim(),
+                role: $('fAddDefense').checked ? 'defense' : 'attack',
+                auto_launch: $('fAddLaunch').checked });
+    $('fAddDirective').value = '';
+    $('fAddDefense').checked = false;
+    dlgAdd.close();
+    toast(`已为「${addTarget.name}」加开 ${h}`);
+  } catch (e) { $('fAddErr').textContent = e.message; }
+  finally { $('btnAddAttempt').disabled = false; }
+  refresh();
+};
+
+// ---------------- 靶机配置（不含 Web 会话操作） ----------------
 function openTarget(c) {
   tgtCh = c;
-  $('tgtName').textContent = c.name + (['running', 'need_help'].includes(c.status) ? '' : '（当前非运行状态，只能保存）');
+  $('tgtName').textContent = c.name;
   $('fTgt').value = c.target || '';
-  $('fTgtMsg').value = defaultTargetMsg(c.target || '');
   $('fTgtErr').textContent = '';
   dlgTarget.showModal();
+  $('fTgt').focus();
 }
-$('fTgt').oninput = () => { $('fTgtMsg').value = defaultTargetMsg($('fTgt').value.trim()); };
-$('btnTgtSave').onclick = () => patchTarget(false);
-$('btnTgtSend').onclick = () => patchTarget(true);
-async function patchTarget(send) {
+$('btnTgtSave').onclick = async () => {
   if (!tgtCh) return;
-  const body = { target: $('fTgt').value.trim() };
-  if (send) body.message = $('fTgtMsg').value;
-  try { await api(`/challenges/${tgtCh.id}`, 'PATCH', body); dlgTarget.close(); }
-  catch (e) { $('fTgtErr').textContent = e.message; }
+  try {
+    $('btnTgtSave').disabled = true;
+    await api(`/challenges/${tgtCh.id}`, 'PATCH', { target: $('fTgt').value.trim() });
+    dlgTarget.close();
+    toast('靶机地址已保存');
+  } catch (e) { $('fTgtErr').textContent = e.message; }
+  finally { $('btnTgtSave').disabled = false; }
   refresh();
-}
+};
 
 // ---------------- 上传附件 ----------------
 $('fUpload').onchange = async () => {
@@ -580,10 +2088,10 @@ $('fUpload').onchange = async () => {
   const res = await r.json().catch(() => ({}));
   if (r.ok) {
     let msg = `已上传到 ${uploadTarget.name}/attachments/: ${res.saved.join(', ')}`;
-    if (res.errors && res.errors.length) msg += '\n解压警告: ' + res.errors.join('; ');
-    if (uploadTarget.status === 'running') msg += '\n（题目进行中，可在终端里告知 agent 新附件）';
-    alert(msg);
-  } else alert('上传失败: ' + (res.detail || r.statusText));
+    if (res.synced) msg += `（已同步 ${res.synced} 个文件）`;
+    toast(msg);
+    if (res.errors && res.errors.length) toast('解压警告: ' + res.errors.join('; '), 'warn', 6000);
+  } else toast('上传失败: ' + (res.detail || r.statusText), 'err', 5000);
   $('fUpload').value = '';
   refresh();
 };
@@ -591,13 +2099,20 @@ $('fUpload').onchange = async () => {
 // ---------------- 根目录 ----------------
 $('rootChip').onclick = async () => {
   const data = await api('/settings/root');
+  $('fRootMode').value = data.competition_mode || 'traditional';
   const list = $('rootList');
   list.innerHTML = '';
   for (const r of data.recent_roots) {
     const d = document.createElement('div');
     d.className = 'root-item' + (r.path === data.current_root ? ' current' : '');
-    d.textContent = (r.path === data.current_root ? '● ' : '○ ') + r.path + (r.exists ? '' : '（不存在）');
-    d.onclick = async () => { await api('/settings/root', 'PUT', { path: r.path }); dlgRoot.close(); refresh(); };
+    const modeLabel = r.competition_mode === 'api_auto' ? 'API全自动' : '传统CTF';
+    d.innerHTML = `<span>${(r.path === data.current_root ? '● ' : '○ ') + r.path}</span><small style="color:var(--dim)">${modeLabel} · ${r.exists ? (r.path === data.current_root ? '当前使用' : '点击切换') : '不存在'}</small>`;
+    d.onclick = async () => {
+      await api('/settings/root', 'PUT', { path: r.path, competition_mode: r.competition_mode || 'traditional' });
+      dlgRoot.close();
+      toast(`已切换赛事目录: ${r.path}`);
+      refresh();
+    };
     list.appendChild(d);
   }
   $('fRootErr').textContent = '';
@@ -609,8 +2124,13 @@ $('rootChip').onkeydown = e => {
 
 $('btnSetRoot').onclick = async () => {
   try {
-    await api('/settings/root', 'PUT', { path: $('fRootPath').value, create_if_missing: $('fRootCreate').checked });
+    const r = await api('/settings/root', 'PUT', {
+      path: $('fRootPath').value,
+      create_if_missing: $('fRootCreate').checked,
+      competition_mode: $('fRootMode').value,
+    });
     dlgRoot.close();
+    toast(`已切换赛事目录: ${r.current_root}`);
   } catch (e) { $('fRootErr').textContent = e.message; }
   refresh();
 };
@@ -618,8 +2138,14 @@ $('btnSetRoot').onclick = async () => {
 // ---------------- flag / 删除 ----------------
 $('btnSetFlag').onclick = async () => {
   if (!flagTarget) return;
-  await api(`/challenges/${flagTarget.id}/flag`, 'POST', { flag: $('fFlag').value });
+  const val = $('fFlag').value.trim();
+  await api(`/challenges/${flagTarget.id}/flag`, 'POST', {
+    flag: val,
+    attempt: $('fFlagAttempt').value,
+    stop_others: $('fFlagStopOthers').checked,
+  });
   dlgFlag.close();
+  toast(val ? `「${flagTarget.name}」已登记 Flag 并标记解出` : `已清空「${flagTarget.name}」的 Flag`);
   refresh();
 };
 
@@ -631,8 +2157,12 @@ $('btnDelAll').onclick = () => {
 };
 async function act_delete(files) {
   if (!delTarget) return;
-  try { await api(`/challenges/${delTarget.id}?files=${files}`, 'DELETE'); dlgDel.close(); }
-  catch (e) { alert(e.message); }
+  const name = delTarget.name;
+  try {
+    await api(`/challenges/${delTarget.id}?files=${files}`, 'DELETE');
+    dlgDel.close();
+    toast(`已删除题目「${name}」`, 'warn');
+  } catch (e) { toast(e.message, 'err', 5000); }
   refresh();
 }
 
@@ -641,10 +2171,14 @@ $('btnSubmitFlag').onclick = async () => {
   if (!flagTarget) return;
   try {
     $('btnSubmitFlag').disabled = true;
-    const r = await api(`/challenges/${flagTarget.id}/submit_flag`, 'POST', { flag: $('fFlag').value });
+    const r = await api(`/challenges/${flagTarget.id}/submit_flag`, 'POST', {
+      flag: $('fFlag').value,
+      attempt: $('fFlagAttempt').value,
+      stop_others: $('fFlagStopOthers').checked,
+    });
     if (r.ok) {
       dlgFlag.close();
-      alert('✅ 平台判定正确' + (r.message ? '：' + r.message : ''));
+      toast('✅ 平台判定正确' + (r.message ? '：' + r.message : ''), 'ok', 5000);
     } else {
       $('fFlagErr').textContent = '❌ 平台判定错误：' + (r.message || '答案错误') + '（flag 未保存）';
     }
@@ -659,7 +2193,7 @@ $('btnContest').onclick = async () => {
     if (!cfg) cfg = await api('/config');
     const data = await api('/contests');
     contests = data.contests;
-  } catch (e) { alert(e.message); return; }
+  } catch (e) { toast(e.message, 'err', 5000); return; }
   const hsel = $('cHarness');
   const prevHarness = hsel.value;
   hsel.innerHTML = '';
@@ -681,8 +2215,35 @@ $('btnContest').onclick = async () => {
   $('cErr').textContent = contests.length ? '' : 'contests/ 目录下还没有适配器 yaml';
   if (contestId && contests.some(c => c.id === contestId)) sel.value = contestId;
   syncContestUI();
+  setContestView('questions');
   dlgContest.showModal();
+  scheduleContestRefresh();
 };
+
+function setContestView(view) {
+  contestView = view;
+  $('cList').hidden = view !== 'questions';
+  $('cImportActions').hidden = view !== 'questions';
+  $('cOverviewView').hidden = view !== 'overview';
+  $('cNoticesView').hidden = view !== 'notices';
+  for (const [id, name] of [['cTabQuestions', 'questions'], ['cTabOverview', 'overview'], ['cTabNotices', 'notices']]) {
+    $(id).classList.toggle('active', name === view);
+  }
+}
+$('cTabQuestions').onclick = () => setContestView('questions');
+$('cTabOverview').onclick = () => setContestView('overview');
+$('cTabNotices').onclick = () => setContestView('notices');
+
+function scheduleContestRefresh() {
+  clearTimeout(contestRefreshTimer);
+  if (!$('cAutoRefresh').checked || !dlgContest.open) return;
+  contestRefreshTimer = setTimeout(async () => {
+    await syncContest(true);
+    scheduleContestRefresh();
+  }, 60000);
+}
+$('cAutoRefresh').onchange = scheduleContestRefresh;
+dlgContest.addEventListener('close', () => clearTimeout(contestRefreshTimer));
 
 function curContest() { return contests.find(c => c.id === $('cAdapter').value) || null; }
 
@@ -690,41 +2251,114 @@ function syncContestUI() {
   const c = curContest();
   contestId = c ? c.id : null;
   $('cNote').textContent = c ? (c.note ? c.note + '  ' : '') +
-    `[支持: ${['list', 'reset', 'submit'].filter(k => c.supports[k]).join('/')}]` : '';
+    `[支持能力: ${['list', 'reset', 'submit'].filter(k => c.supports[k]).join(' / ')}]` : '';
+  const hostSpec = (c && c.server_host) || {};
+  $('cServerHostWrap').hidden = !hostSpec.required;
+  $('cServerHostLabel').textContent = hostSpec.label || '比赛服务地址';
+  $('cServerHost').placeholder = hostSpec.placeholder || 'https://example.com';
+  $('cServerHost').value = hostSpec.value || '';
   $('cToken').placeholder = c && c.has_token ? '已保存 token（留空沿用；粘贴新 token 可更换）' : '赛事方发放的队伍 token';
 }
 $('cAdapter').onchange = syncContestUI;
 
-$('btnFetchQ').onclick = async () => {
+function renderContestQuery(name, data) {
+  if (name === 'overview') {
+    const point = data.stagePoint ?? data.score ?? data.point ?? '-';
+    const rank = data.stageRank ?? data.rank ?? '-';
+    $('cOverviewStats').textContent = `当前得分：${point}　当前排名：${rank}`;
+  } else if (name === 'match_info') {
+    $('cMatchInfo').textContent = `【竞赛注意事项】\n${data.note || '（无）'}\n\n【竞赛规则】\n${data.rule || '（无）'}`;
+  } else if (name === 'notices') {
+    contestNoticeItems = Array.isArray(data) ? data : [];
+    renderContestNotices();
+  }
+}
+
+function renderContestNotices() {
+  const list = $('cNoticeList');
+  list.innerHTML = '';
+  if (!contestNoticeItems.length) {
+    list.innerHTML = '<div style="color:var(--dim);padding:16px;text-align:center">暂无公告</div>';
+    return;
+  }
+  const spec = (curContest().queries || {}).notices || {};
+  for (const item of contestNoticeItems) {
+    const id = item[spec.item_id || 'id'];
+    const title = item[spec.item_title || 'title'] || `公告 ${id}`;
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.style.cssText = 'display:flex;width:100%;justify-content:flex-start;margin:4px 0;text-align:left';
+    b.textContent = title;
+    b.onclick = () => loadContestNoticeDetail(id, item);
+    list.appendChild(b);
+  }
+}
+
+async function loadContestNoticeDetail(id, fallback) {
   const c = curContest();
-  if (!c) return;
-  $('cErr').textContent = '';
-  $('cList').innerHTML = '<div style="color:var(--dim);padding:12px">拉取中……</div>';
+  $('cNoticeDetail').textContent = '读取公告详情中……';
   try {
-    $('btnFetchQ').disabled = true;
-    const t = $('cToken').value.trim();
-    const data = await api(`/contests/${c.id}/questions` + (t ? `?token=${encodeURIComponent(t)}` : ''));
-    contestQs = data.questions;
-    $('cToken').value = '';        // 已保存到服务端, 清空防误改
+    const spec = (c.queries || {}).notices || {};
+    if (!spec.has_detail) {
+      $('cNoticeDetail').textContent = JSON.stringify(fallback, null, 2);
+      return;
+    }
+    const r = await api(`/contests/${c.id}/queries/notices/detail?item_id=${encodeURIComponent(id)}`);
+    const d = r.data || {};
+    $('cNoticeDetail').textContent = d.content || d.title || JSON.stringify(d, null, 2);
+  } catch (e) { $('cNoticeDetail').textContent = '读取失败: ' + e.message; }
+}
+
+async function syncContest(auto = false) {
+  const c = curContest();
+  if (!c || contestSyncing) return;
+  contestSyncing = true;
+  $('btnFetchQ').disabled = true;
+  if (!auto) $('cErr').textContent = '';
+  const t = $('cToken').value.trim();
+  const host = $('cServerHostWrap').hidden ? '' : $('cServerHost').value.trim();
+  const queryNames = Object.keys(c.queries || {});
+  try {
+    const requests = [
+      api(`/contests/${c.id}/questions?token=${encodeURIComponent(t)}&server_host=${encodeURIComponent(host)}`),
+      ...queryNames.map(name => api(`/contests/${c.id}/queries/${name}` +
+        `?token=${encodeURIComponent(t)}&server_host=${encodeURIComponent(host)}`)),
+    ];
+    const results = await Promise.allSettled(requests);
+    if ((curContest() || {}).id !== c.id) return;
+    if (results[0].status === 'rejected') throw results[0].reason;
+    contestQs = results[0].value.questions || [];
     renderContestQs();
-    if (c.has_token === false) {   // 本次是新 token, 刷新下拉里「已存 token」标记
+    const warnings = [];
+    for (let i = 0; i < queryNames.length; i++) {
+      const result = results[i + 1];
+      if (result.status === 'fulfilled') renderContestQuery(queryNames[i], result.value.data);
+      else warnings.push(`${queryNames[i]}: ${result.reason.message}`);
+    }
+    $('cToken').value = '';
+    if (c.server_host) c.server_host.value = host;
+    if (!c.has_token) {
       c.has_token = true;
       for (const o of $('cAdapter').options)
         if (o.value === c.id) o.textContent = c.name + '（已存 token）';
-      syncContestUI();
     }
+    $('cSyncStatus').textContent = `上次同步 ${new Date().toLocaleTimeString()} · ${contestQs.length} 题`;
+    $('cErr').textContent = warnings.join('；');
   } catch (e) {
-    contestQs = [];
-    $('cList').innerHTML = '';
+    // 自动刷新失败时保留上一波题目，避免界面被清空。
     $('cErr').textContent = e.message;
-  } finally { $('btnFetchQ').disabled = false; }
-};
+  } finally {
+    contestSyncing = false;
+    $('btnFetchQ').disabled = false;
+  }
+}
+$('btnFetchQ').onclick = () => syncContest(false);
 
 function renderContestQs() {
   const list = $('cList');
   list.innerHTML = '';
   if (!contestQs.length) {
-    list.innerHTML = '<div style="color:var(--dim);padding:12px">平台返回 0 道题</div>';
+    list.innerHTML = '<div style="color:var(--dim);padding:16px;text-align:center">平台返回 0 道题</div>';
     return;
   }
   for (const q of contestQs) {
@@ -734,13 +2368,14 @@ function renderContestQs() {
     cb.type = 'checkbox';
     cb.dataset.qid = q.question_id;
     cb.disabled = !!q.local;
-    cb.checked = !q.local;
+    cb.checked = q.local ? false : (contestChecked.get(String(q.question_id)) ?? true);
+    cb.onchange = () => contestChecked.set(String(q.question_id), cb.checked);
     const main = document.createElement('div');
     main.style.minWidth = '0';
     const mapped = (q.category_raw || '').toLowerCase() !== q.category ? `→${q.category}` : '';
     const subBits = [
       (q.category_raw || q.category || '?') + mapped,
-      q.score != null ? q.score + ' 分' : '',
+      q.score != null ? q.score + ' pts' : '',
       q.interactive ? '容器题' : '静态题',
       q.file_url ? '有附件' : '',
       q.target ? '🎯 ' + q.target : '',
@@ -756,30 +2391,35 @@ function renderContestQs() {
     const hsel = document.createElement('select');
     hsel.dataset.qid = q.question_id;
     hsel.disabled = !!q.local;
-    hsel.style.cssText = 'width:auto;font-size:11px;padding:3px 5px';
+    hsel.style.cssText = 'width:auto;font-size:11px;padding:3px 6px';
     hsel.title = '该题导入后使用的 harness';
     for (const h of (cfg ? cfg.harnesses : [])) {
       const o = document.createElement('option');
       o.value = o.textContent = h;
       hsel.appendChild(o);
     }
-    // 导入默认 claude (没有 claude 则回退到全局默认)
-    hsel.value = cfg && cfg.harnesses.includes('claude') ? 'claude' : (cfg ? cfg.default_harness : '');
+    hsel.value = contestHarnesses.get(String(q.question_id)) ||
+      (cfg && cfg.harnesses.includes('claude') ? 'claude' : (cfg ? cfg.default_harness : ''));
+    hsel.onchange = () => contestHarnesses.set(String(q.question_id), hsel.value);
     row.append(cb, main, hsel, tags);
     list.appendChild(row);
   }
-  $('cCheckAll').checked = false;
+  const enabledCbs = [...list.querySelectorAll('input[type=checkbox]:not(:disabled)')];
+  $('cCheckAll').checked = enabledCbs.length > 0 && enabledCbs.every(cb => cb.checked);
 }
 
 $('cCheckAll').onchange = () => {
-  for (const cb of $('cList').querySelectorAll('input[type=checkbox]:not(:disabled)'))
+  for (const cb of $('cList').querySelectorAll('input[type=checkbox]:not(:disabled)')) {
     cb.checked = $('cCheckAll').checked;
+    contestChecked.set(String(cb.dataset.qid), cb.checked);
+  }
 };
 
-// 「全部设为」: 一键改所有未导入题的 harness 下拉
 $('cHarness').onchange = () => {
-  for (const s of $('cList').querySelectorAll('select[data-qid]:not(:disabled)'))
+  for (const s of $('cList').querySelectorAll('select[data-qid]:not(:disabled)')) {
     s.value = $('cHarness').value;
+    contestHarnesses.set(String(s.dataset.qid), s.value);
+  }
 };
 
 $('btnImport').onclick = async () => {
@@ -802,17 +2442,19 @@ $('btnImport').onclick = async () => {
     });
     let msg = `导入 ${r.created.length} 题`;
     if (r.skipped.length) msg += `，跳过已导入 ${r.skipped.length} 题`;
-    if (r.errors.length) msg += `\n失败 ${r.errors.length} 题:\n` + r.errors.join('\n');
-    alert(msg);
-    if (!r.errors.length) dlgContest.close();
-    else $('btnFetchQ').click();   // 有失败的保留对话框, 刷新列表标注
+    if (r.errors.length) {
+      toast(`${msg}；失败 ${r.errors.length} 题: ${r.errors.join('; ')}`, 'err', 6000);
+      $('btnFetchQ').click();
+    } else {
+      toast(msg);
+      dlgContest.close();
+    }
   } catch (e) { $('cErr').textContent = e.message; }
   finally { $('btnImport').disabled = false; }
   refresh();
 };
 
-refresh();
-setInterval(refresh, 3000);
+refresh(false);
 </script>
 </body>
 </html>

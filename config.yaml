@@ -3,8 +3,41 @@
 
 panes_per_window: 4          # 每 4 个 pane 一组(tiled 平铺); 超出在同一个 session 里开新标签页(tmux window); 0 = 全部平铺在唯一 window
 poll_interval: 4             # monitor 轮询间隔(秒)
+launch_concurrency: 2        # 全局同时冷启动/恢复的 harness 数；排队不影响已运行会话
+idle_poll_interval: 20       # exited/solved 且无活跃路时的状态轮询间隔(秒)
+capture_lines: 160           # 状态检测与预览抓取行数；退出另有前台进程探针
+
+# 资源保护（仅外层调度，不修改任何 harness/MCP 配置）
+# 启动前可用内存不足或负载过高时排队；systemd 不可用时自动退回普通启动。
+resource_limits:
+  enabled: true
+  admission_control: true
+  min_available_mb: 1800       # 给桌面和系统预留的最低可用内存
+  max_load_per_cpu: 1.5        # 1 分钟 load / CPU 核数超过该值时暂缓启动
+  cpu_quota_per_attempt: 65    # 已废弃：不再限制单路
+  scope_enabled: false          # 不限制已在跑任务；只做新启动前的资源闸门
+  # 旧的 slice_cpu_quota / slice_memory_high 配置不再使用
 terminal_emulator: gnome-terminal   # 人工接管时弹的终端: gnome-terminal/konsole/kitty/alacritty/wezterm/xterm
 default_harness: codex
+# AWDP 自动防御路的默认 harness: 攻击路写下已验证漏洞点时自动加开它修洞
+# (创建表单 AWDP 区可逐题覆盖)。dsh 自带 idalib/r2 MCP, 适合 patch 二进制
+defense_harness: dsh
+# 漏洞点接力的推送冷却(秒): 条目数增长才触发, 冷却期内的增长攒到到期一起推,
+# 防止板子被频繁改写时防御路被反复打扰
+defense_push_cooldown: 180
+
+# Jev (TypeSafe System One 决策模型) 语义闸门: 漏洞点条目触发时让它判
+# "是不是防御路没见过的新漏洞", 纯措辞改写/依据补充不推 (noul 校准概率 >= 阈值)。
+# key 从环境变量 TYPESAFE_API_KEY 读; Jev 不可用时自动回退到条目数门原行为
+jev_vuln_gate: true        # key 在 ~/.ubz-ctf/env (run.sh 启动时 source)
+jev_vuln_threshold: 0.6
+# 求助二审: help_keywords 命中后 Jev 判"真求助还是只是提到这些词", 屏幕不变不重复调
+jev_help_gate: true
+jev_help_threshold: 0.6
+# 空转检测: 本地已交付+远程未开+还在忙 -> Jev 判空转亮 🌀 徽章 (只提醒不自动停)
+jev_spin_gate: true
+jev_spin_threshold: 0.7
+spin_check_interval: 300   # 每路空转判定最小间隔(秒)
 
 # capture-pane 内容中出现这些关键词时标记 need_help (misc 人工求助通道)
 help_keywords:
@@ -20,18 +53,34 @@ zip_passwords:               # 加密 zip 尝试密码列表
   - infected
 
 # harness 启动命令表, Web 表单的 harness 下拉框动态取自这里, 可自行加行
-# dsh: DeepSeek Harness TUI; DSH_PERMISSION_MODE=danger-full-access = 沙箱全开+审批全免
+# dsh:      DeepSeek Harness TUI; DSH_PERMISSION_MODE=danger-full-access = 沙箱全开+审批全免
+# kimi:     Kimi Code CLI; --auto = Never Ask 模式(全程免确认自动执行)
+# agy:      Antigravity CLI; 走本地 Magpie 代理并开启 --dangerously-skip-permissions
+# opencode: OpenCode TUI; --auto = 自动批准所有未显式拒绝的权限请求
+# pi:       Pi Coding Agent; --approve = 信任本题目录及其项目资源, 内置工具本身无逐条审批
+# zcode:    ZCode TUI; --mode yolo = 普通工具跳过权限提示, 适合隔离的题目目录
 harnesses:
-  codex:  'codex --sandbox danger-full-access --ask-for-approval never'
-  claude: 'claude --dangerously-skip-permissions'
-  cursor: 'agent --force --trust'
-  dsh:    'DSH_PERMISSION_MODE=danger-full-access dsh-tui'
+  codex:    'codex --sandbox danger-full-access --ask-for-approval never'
+  claude:   'claude --dangerously-skip-permissions'
+  cursor:   'agent --force --trust'
+  dsh:      'DSH_PERMISSION_MODE=danger-full-access dsh-tui'
+  kimi:     'kimi --auto'
+  agy:      'GEMINI_API_KEY=magpie-agy GOOGLE_GEMINI_BASE_URL=http://127.0.0.1:3425 agy --model "magpie/antigravity/gemini-4-argon" --dangerously-skip-permissions'
+  opencode: 'opencode --auto'
+  pi:       'pi --approve'
+  zcode:    'zcode --mode yolo'
 
 # 进程退出后的恢复命令
 # dsh 的 --resume 不带 id 时读全局 ~/.dsh-tui/resume.txt(最后一次退出的会话),
-# 多题并行会串题, 所以走 bin/dsh-resume 按当前目录解析出自己的会话 id 再恢复
+# 多题并行会串题, 所以走 bin/dsh-resume 按当前目录解析出自己的会话 id 再恢复;
+# kimi / agy / opencode / pi / zcode 的 --continue 均原生按当前工作目录恢复最近会话
 resume_commands:
-  codex:  'codex --sandbox danger-full-access --ask-for-approval never resume --last'
-  claude: 'claude -c --dangerously-skip-permissions'
-  cursor: 'agent --continue --force --trust'
-  dsh:    'DSH_PERMISSION_MODE=danger-full-access ~/unboundz-ctf/bin/dsh-resume'
+  codex:    'codex --sandbox danger-full-access --ask-for-approval never resume --last'
+  claude:   'claude -c --dangerously-skip-permissions'
+  cursor:   'agent --continue --force --trust'
+  dsh:      'DSH_PERMISSION_MODE=danger-full-access ~/unboundz-ctf/bin/dsh-resume'
+  kimi:     'kimi --continue --auto'
+  agy:      'GEMINI_API_KEY=magpie-agy GOOGLE_GEMINI_BASE_URL=http://127.0.0.1:3425 agy --continue --model "magpie/antigravity/gemini-4-argon" --dangerously-skip-permissions'
+  opencode: 'opencode --continue --auto'
+  pi:       'pi --continue --approve'
+  zcode:    'zcode --continue --mode yolo'
